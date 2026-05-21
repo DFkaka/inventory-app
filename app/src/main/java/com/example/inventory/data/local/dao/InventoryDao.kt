@@ -5,17 +5,33 @@ import com.example.inventory.data.local.model.InventorySummary
 
 class InventoryDao(private val db: SQLiteDatabase) {
 
+    private val SELECT_FIELDS = """
+        p.id, p.code, p.name, p.barcode,
+        COALESCE(c.name, '') as category_name,
+        p.unit, p.spec,
+        COALESCE(inv.quantity, 0) as quantity,
+        COALESCE(inv.safety_stock, 0) as safety_stock,
+        p.cost_price, p.wholesale_price, p.retail_price,
+        COALESCE(inv.quantity, 0) * p.cost_price as total_cost,
+        COALESCE(inv.quantity, 0) * p.retail_price as total_retail
+    """.trimIndent()
+
+    private fun mapCursor(cursor: android.database.Cursor): InventorySummary {
+        return InventorySummary(
+            productId = cursor.getLong(0), code = cursor.getString(1),
+            name = cursor.getString(2), barcode = cursor.getString(3),
+            categoryName = cursor.getString(4), unit = cursor.getString(5),
+            spec = cursor.getString(6), quantity = cursor.getDouble(7),
+            safetyStock = cursor.getDouble(8), costPrice = cursor.getDouble(9),
+            wholesalePrice = cursor.getDouble(10), retailPrice = cursor.getDouble(11),
+            totalCost = cursor.getDouble(12), totalRetail = cursor.getDouble(13)
+        )
+    }
+
     fun getInventorySummary(keyword: String = ""): List<InventorySummary> {
         val list = mutableListOf<InventorySummary>()
         val sql = """
-            SELECT p.id, p.code, p.name, p.barcode,
-                   COALESCE(c.name, '') as category_name,
-                   p.unit, p.spec,
-                   COALESCE(inv.quantity, 0) as quantity,
-                   COALESCE(inv.safety_stock, 0) as safety_stock,
-                   p.cost_price, p.retail_price,
-                   COALESCE(inv.quantity, 0) * p.cost_price as total_cost,
-                   COALESCE(inv.quantity, 0) * p.retail_price as total_retail
+            SELECT $SELECT_FIELDS
             FROM products p
             LEFT JOIN inventory inv ON p.id = inv.product_id
             LEFT JOIN categories c ON p.category_id = c.id
@@ -29,17 +45,7 @@ class InventoryDao(private val db: SQLiteDatabase) {
         } else null
 
         db.rawQuery(sql, args).use { cursor ->
-            while (cursor.moveToNext()) {
-                list.add(InventorySummary(
-                    productId = cursor.getLong(0), code = cursor.getString(1),
-                    name = cursor.getString(2), barcode = cursor.getString(3),
-                    categoryName = cursor.getString(4), unit = cursor.getString(5),
-                    spec = cursor.getString(6), quantity = cursor.getDouble(7),
-                    safetyStock = cursor.getDouble(8), costPrice = cursor.getDouble(9),
-                    retailPrice = cursor.getDouble(10), totalCost = cursor.getDouble(11),
-                    totalRetail = cursor.getDouble(12)
-                ))
-            }
+            while (cursor.moveToNext()) list.add(mapCursor(cursor))
         }
         return list
     }
@@ -47,31 +53,14 @@ class InventoryDao(private val db: SQLiteDatabase) {
     fun getLowStockAlerts(): List<InventorySummary> {
         val list = mutableListOf<InventorySummary>()
         db.rawQuery("""
-            SELECT p.id, p.code, p.name, p.barcode,
-                   COALESCE(c.name, '') as category_name,
-                   p.unit, p.spec,
-                   COALESCE(inv.quantity, 0) as quantity,
-                   COALESCE(inv.safety_stock, 0) as safety_stock,
-                   p.cost_price, p.retail_price,
-                   COALESCE(inv.quantity, 0) * p.cost_price as total_cost,
-                   COALESCE(inv.quantity, 0) * p.retail_price as total_retail
+            SELECT $SELECT_FIELDS
             FROM products p
             LEFT JOIN inventory inv ON p.id = inv.product_id
             LEFT JOIN categories c ON p.category_id = c.id
             WHERE COALESCE(inv.quantity, 0) <= COALESCE(inv.safety_stock, 0)
             ORDER BY p.code
         """.trimIndent(), null).use { cursor ->
-            while (cursor.moveToNext()) {
-                list.add(InventorySummary(
-                    productId = cursor.getLong(0), code = cursor.getString(1),
-                    name = cursor.getString(2), barcode = cursor.getString(3),
-                    categoryName = cursor.getString(4), unit = cursor.getString(5),
-                    spec = cursor.getString(6), quantity = cursor.getDouble(7),
-                    safetyStock = cursor.getDouble(8), costPrice = cursor.getDouble(9),
-                    retailPrice = cursor.getDouble(10), totalCost = cursor.getDouble(11),
-                    totalRetail = cursor.getDouble(12)
-                ))
-            }
+            while (cursor.moveToNext()) list.add(mapCursor(cursor))
         }
         return list
     }

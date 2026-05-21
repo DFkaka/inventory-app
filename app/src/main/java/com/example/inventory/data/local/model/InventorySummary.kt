@@ -11,6 +11,7 @@ data class InventorySummary(
     val quantity: Double = 0.0,
     val safetyStock: Double = 0.0,
     val costPrice: Double = 0.0,
+    val wholesalePrice: Double = 0.0,
     val retailPrice: Double = 0.0,
     val totalCost: Double = 0.0,
     val totalRetail: Double = 0.0
