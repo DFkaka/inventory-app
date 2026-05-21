@@ -152,16 +152,20 @@ fun PurchaseEntryDialog(onDismiss: () -> Unit, onSaved: () -> Unit) {
     val context = LocalContext.current
 
     LaunchedEffect(supplierQuery) {
-        scope.launch(Dispatchers.IO) {
-            val suppliers = SupplierRepository(context).getAllSuppliers(supplierQuery)
-            supplierOptions = suppliers.map { "${it.code} | ${it.name}" }
+        withContext(Dispatchers.IO) {
+            try {
+                val suppliers = SupplierRepository(context).getAllSuppliers(supplierQuery)
+                supplierOptions = suppliers.map { "${it.code} | ${it.name}" }
+            } catch (_: Exception) { }
         }
     }
-
-    LaunchedEffect(supplierQuery) {
-        scope.launch(Dispatchers.IO) {
-            val products = ProductRepository(context).searchProducts(productQuery)
-            productOptions = products.map { "${it.code} | ${it.name}" }
+ 
+    LaunchedEffect(productQuery) {
+        withContext(Dispatchers.IO) {
+            try {
+                val products = ProductRepository(context).searchProducts(productQuery)
+                productOptions = products.map { "${it.code} | ${it.name}" }
+            } catch (_: Exception) { }
         }
     }
 
