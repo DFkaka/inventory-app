@@ -31,6 +31,7 @@ import java.time.LocalDate
 
 @Composable
 fun PurchaseListScreen(
+    onOrderClick: (Long) -> Unit = {},
     onManageSupplier: () -> Unit = {},
     viewModel: PurchaseListViewModel = viewModel()
 ) {

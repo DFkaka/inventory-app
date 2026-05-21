@@ -60,6 +60,20 @@ class CustomerDao(private val db: SQLiteDatabase) {
         return db.delete("customers", "id = ?", arrayOf(id.toString()))
     }
 
+
+    fun generateCode(prefix: String = ""): String {
+        val codes = mutableSetOf<String>()
+        db.rawQuery("SELECT code FROM customers WHERE code LIKE ? ORDER BY code", arrayOf("$prefix%")).use { cursor ->
+            while (cursor.moveToNext()) codes.add(cursor.getString(0))
+        }
+        var num = 1
+        while (true) {
+            val code = prefix + "%04d".format(num)
+            if (code !in codes) return code
+            num++
+        }
+    }
+
     fun isCodeExists(code: String): Boolean {
         return db.rawQuery("SELECT 1 FROM customers WHERE code = ?", arrayOf(code)).use { it.moveToFirst() }
     }
