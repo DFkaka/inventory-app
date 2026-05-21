@@ -60,6 +60,7 @@ class CustomerDao(private val db: SQLiteDatabase) {
         return db.delete("customers", "id = ?", arrayOf(id.toString()))
     }
 
-    fun isCodeExists(code: String): Boolean {`r`n        return db.rawQuery("SELECT 1 FROM customers WHERE code = ?", arrayOf(code)).use { it.moveToFirst() }`r`n    }
+    fun isCodeExists(code: String): Boolean {
+        return db.rawQuery("SELECT 1 FROM customers WHERE code = ?", arrayOf(code)).use { it.moveToFirst() }
     }
 }
