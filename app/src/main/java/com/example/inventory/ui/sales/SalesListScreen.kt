@@ -123,6 +123,54 @@ fun SalesListScreen(
 }
 
 @Composable
+fun SalesOrderCard(order: SalesOrder) {
+    Card(
+        shape = RoundedCornerShape(8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(order.orderNo, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                StatusBadge(
+                    label = when (order.status) {
+                        "draft" -> "草稿"; "shipped" -> "已审核"; "cancelled" -> "已取消"; else -> order.status
+                    },
+                    color = when (order.status) {
+                        "shipped" -> Green500; "cancelled" -> Red500; else -> Grey600
+                    }
+                )
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("客户: ${order.customer}", fontSize = 13.sp)
+                Text(order.orderDate, fontSize = 12.sp, color = Grey600)
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("¥%.2f".format(order.totalAmount), fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold, color = Green500)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("已付: ¥%.2f".format(order.paidAmount), fontSize = 12.sp, color = Grey600)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    StatusBadge(
+                        label = order.paymentStatus,
+                        color = if (order.paymentStatus == "已结单") Green500 else Orange500
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun SalesEntryDialog(
     onDismiss: () -> Unit,
     onSaved: () -> Unit

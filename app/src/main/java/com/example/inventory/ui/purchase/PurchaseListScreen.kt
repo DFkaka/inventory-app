@@ -122,6 +122,62 @@ fun PurchaseListScreen(
 }
 
 @Composable
+fun OrderCard(order: PurchaseOrder) {
+    Card(
+        shape = RoundedCornerShape(8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(order.orderNo, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                StatusBadge(
+                    label = when (order.status) {
+                        "draft" -> "草稿"; "received" -> "已审核"; "cancelled" -> "已取消"; else -> order.status
+                    },
+                    color = when (order.status) {
+                        "received" -> Green500; "cancelled" -> Red500; else -> Grey600
+                    }
+                )
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("供应商: ${order.supplier}", fontSize = 13.sp)
+                Text(order.orderDate, fontSize = 12.sp, color = Grey600)
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("¥%.2f".format(order.totalAmount), fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold, color = Orange500)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("已付: ¥%.2f".format(order.paidAmount), fontSize = 12.sp, color = Grey600)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    StatusBadge(
+                        label = order.paymentStatus,
+                        color = if (order.paymentStatus == "已结单") Green500 else Orange500
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun StatusBadge(label: String, color: androidx.compose.ui.graphics.Color) {
+    Surface(shape = RoundedCornerShape(4.dp), color = color.copy(alpha = 0.1f)) {
+        Text(text = label, color = color, fontSize = 11.sp, fontWeight = FontWeight.Medium,
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+    }
+}
+
+@Composable
 fun PurchaseEntryDialog(
     onDismiss: () -> Unit,
     onSaved: () -> Unit
