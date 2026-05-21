@@ -1,5 +1,6 @@
 ﻿package com.example.inventory.data.local.dao
 
+import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
 import com.example.inventory.data.local.model.Supplier
 
@@ -41,5 +42,26 @@ class SupplierDao(private val db: SQLiteDatabase) {
             }
         }
         return null
+    }
+
+    fun insert(code: String, name: String, contact: String = "", bankAccount: String = "", note: String = ""): Long {
+        val cv = ContentValues().apply {
+            put("code", code)
+            put("name", name)
+            put("contact", contact)
+            put("bank_account", bankAccount)
+            put("note", note)
+        }
+        return db.insert("suppliers", null, cv)
+    }
+
+    fun delete(id: Long): Int {
+        return db.delete("suppliers", "id = ?", arrayOf(id.toString()))
+    }
+
+    fun isCodeExists(code: String): Boolean {
+        db.rawQuery("SELECT 1 FROM suppliers WHERE code = ?", arrayOf(code)).use { cursor ->
+            return cursor.moveToFirst()
+        }
     }
 }

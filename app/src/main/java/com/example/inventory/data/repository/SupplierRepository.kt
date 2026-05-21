@@ -9,6 +9,9 @@ class SupplierRepository(context: Context) : BaseRepository(context) {
     private val dao by lazy { SupplierDao(db) }
 
     fun getAllSuppliers(keyword: String = ""): List<Supplier> = dao.getAll(keyword)
-
     fun getSupplierById(id: Long): Supplier? = dao.getById(id)
+    fun insert(code: String, name: String, contact: String = "", bankAccount: String = "", note: String = ""): Long =
+        dao.insert(code, name, contact, bankAccount, note)
+    fun delete(id: Long): Int = dao.delete(id)
+    fun isCodeExists(code: String): Boolean = dao.isCodeExists(code)
 }

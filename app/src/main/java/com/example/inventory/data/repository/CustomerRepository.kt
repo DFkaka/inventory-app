@@ -9,6 +9,9 @@ class CustomerRepository(context: Context) : BaseRepository(context) {
     private val dao by lazy { CustomerDao(db) }
 
     fun getAllCustomers(keyword: String = ""): List<Customer> = dao.getAll(keyword)
-
     fun getCustomerById(id: Long): Customer? = dao.getById(id)
+    fun insert(code: String, name: String, contact: String = "", phone: String = "", address: String = "", note: String = ""): Long =
+        dao.insert(code, name, contact, phone, address, note)
+    fun delete(id: Long): Int = dao.delete(id)
+    fun isCodeExists(code: String): Boolean = dao.isCodeExists(code)
 }

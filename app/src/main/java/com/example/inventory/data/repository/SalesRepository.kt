@@ -8,16 +8,13 @@ class SalesRepository(context: Context) : BaseRepository(context) {
 
     private val dao by lazy { SalesDao(db) }
 
-    fun getAllOrders(
-        keyword: String = "",
-        status: String = "",
-        dateFrom: String = "",
-        dateTo: String = ""
-    ): List<SalesOrder> = dao.getAll(keyword, status, dateFrom, dateTo)
-
-    fun getOrdersByStatus(status: String): List<SalesOrder> = dao.getByStatus(status)
-
-    fun getUnpaidOrders(): List<SalesOrder> = dao.getUnpaid()
-
+    fun getAllOrders(keyword: String = "", status: String = "", dateFrom: String = "", dateTo: String = ""): List<SalesOrder> =
+        dao.getAll(keyword, status, dateFrom, dateTo)
     fun getOrderById(id: Long): SalesOrder? = dao.getById(id)
+    fun insert(orderNo: String, customer: String, orderDate: String, totalAmount: Double = 0.0,
+               status: String = "draft", note: String = ""): Long =
+        dao.insert(orderNo, customer, orderDate, totalAmount, status, note)
+    fun insertItem(orderId: Long, productId: Long, quantity: Double, unitPrice: Double,
+                   barcode: String = "", unit: String = "个", spec: String = "") =
+        dao.insertItem(orderId, productId, quantity, unitPrice, barcode, unit, spec)
 }

@@ -7,7 +7,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -16,11 +15,13 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.inventory.ui.catalog.CatalogScreen
+import com.example.inventory.ui.customer.CustomerManageScreen
 import com.example.inventory.ui.home.HomeScreen
 import com.example.inventory.ui.inventory.InventoryScreen
 import com.example.inventory.ui.product.ProductDetailScreen
 import com.example.inventory.ui.purchase.PurchaseListScreen
 import com.example.inventory.ui.sales.SalesListScreen
+import com.example.inventory.ui.supplier.SupplierManageScreen
 import com.example.inventory.ui.theme.Blue700
 import com.example.inventory.ui.theme.Grey600
 
@@ -38,7 +39,6 @@ fun MainScreen() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-
     val showBottomBar = currentRoute in MainTab.entries.map { it.route }
 
     Scaffold(
@@ -81,10 +81,8 @@ fun MainScreen() {
                             },
                             label = { Text(tab.label) },
                             colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = Blue700,
-                                selectedTextColor = Blue700,
-                                unselectedIconColor = Grey600,
-                                unselectedTextColor = Grey600
+                                selectedIconColor = Blue700, selectedTextColor = Blue700,
+                                unselectedIconColor = Grey600, unselectedTextColor = Grey600
                             )
                         )
                     }
@@ -107,18 +105,23 @@ fun MainScreen() {
                 InventoryScreen(onProductClick = { id -> navController.navigate("product/$id") })
             }
             composable(MainTab.PURCHASE.route) {
-                PurchaseListScreen()
+                PurchaseListScreen(onManageSupplier = { navController.navigate("supplier_manage") })
             }
             composable(MainTab.SALES.route) {
-                SalesListScreen()
+                SalesListScreen(onManageCustomer = { navController.navigate("customer_manage") })
+            }
+            composable("supplier_manage") {
+                SupplierManageScreen(onBack = { navController.popBackStack() })
+            }
+            composable("customer_manage") {
+                CustomerManageScreen(onBack = { navController.popBackStack() })
             }
             composable(
                 route = "product/{productId}",
                 arguments = listOf(navArgument("productId") { type = NavType.LongType })
             ) { entry ->
-                val productId = entry.arguments?.getLong("productId") ?: 0L
                 ProductDetailScreen(
-                    productId = productId,
+                    productId = entry.arguments?.getLong("productId") ?: 0L,
                     onBack = { navController.popBackStack() }
                 )
             }
