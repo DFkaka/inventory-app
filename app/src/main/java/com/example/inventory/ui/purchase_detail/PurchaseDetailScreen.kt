@@ -3,7 +3,9 @@
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -36,6 +38,9 @@ fun PurchaseDetailScreen(
     val uiState by viewModel.uiState.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     var deleteConfirmId by remember { mutableStateOf<Long?>(null) }
+    var editingItem by remember { mutableStateOf<PurchaseOrderItem?>(null) }
+
+    val isAudited = uiState.order?.status == "received"
 
     Scaffold(
         topBar = {
@@ -54,8 +59,10 @@ fun PurchaseDetailScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, "添加明细")
+            if (!isAudited) {
+                FloatingActionButton(onClick = { showAddDialog = true }) {
+                    Icon(Icons.Default.Add, "添加明细")
+                }
             }
         }
     ) { padding ->
@@ -97,7 +104,7 @@ fun PurchaseDetailScreen(
                     item { Text("暂无明细", color = Grey600, fontSize = 13.sp, modifier = Modifier.padding(vertical = 16.dp)) }
                 } else {
                     items(uiState.items, key = { it.id }) { item ->
-                        ItemCard(item = item, onDelete = { deleteConfirmId = item.id })
+                        ItemCard(item = item, editable = !isAudited, onEdit = { editingItem = item }, onDelete = { deleteConfirmId = item.id })
                     }
                 }
             }
@@ -108,10 +115,19 @@ fun PurchaseDetailScreen(
         AddItemDialog(
             onDismiss = { showAddDialog = false },
             onConfirm = { productCode, productName, qty, price, barcode, unit ->
-                uiState.order?.let { o ->
-                    viewModel.addItem(o.id, productCode, productName, qty, price, barcode, unit)
-                }
+                uiState.order?.let { o -> viewModel.addItem(o.id, productCode, productName, qty, price, barcode, unit) }
                 showAddDialog = false
+            }
+        )
+    }
+
+    editingItem?.let { item ->
+        EditItemDialog(
+            item = item,
+            onDismiss = { editingItem = null },
+            onConfirm = { qty, price ->
+                uiState.order?.let { o -> viewModel.updateItem(o.id, item.id, qty, price) }
+                editingItem = null
             }
         )
     }
@@ -133,19 +149,50 @@ fun PurchaseDetailScreen(
 }
 
 @Composable
-fun ItemCard(item: PurchaseOrderItem, onDelete: () -> Unit) {
+fun ItemCard(item: PurchaseOrderItem, editable: Boolean = true, onEdit: () -> Unit = {}, onDelete: () -> Unit = {}) {
     Card(shape = RoundedCornerShape(8.dp), elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
         Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
-                Text("商品ID: ${item.productId}", fontSize = 13.sp, fontWeight = FontWeight.Medium)
-                Text("单价: ¥%.2f | 数量: ${item.quantity.toInt()} ${item.unit}".format(item.unitPrice), fontSize = 12.sp, color = Grey600)
+                Text("${item.productName} [${item.productCode}]", fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                Text("单价: ¥%.2f | 数量: %.1f %s".format(item.unitPrice, item.quantity, item.unit), fontSize = 12.sp, color = Grey600)
                 Text("小计: ¥%.2f".format(item.subtotal), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Orange500)
             }
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, "删除", tint = Red500, modifier = Modifier.size(20.dp))
+            if (editable) {
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Default.Edit, "编辑", tint = Blue700, modifier = Modifier.size(20.dp))
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, "删除", tint = Red500, modifier = Modifier.size(20.dp))
+                }
             }
         }
     }
+}
+
+@Composable
+fun EditItemDialog(item: PurchaseOrderItem, onDismiss: () -> Unit, onConfirm: (Double, Double) -> Unit) {
+    var quantity by remember { mutableStateOf(item.quantity.toString()) }
+    var unitPrice by remember { mutableStateOf(item.unitPrice.toString()) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss, title = { Text("编辑明细") },
+        text = {
+            Column {
+                Text("${item.productName} [${item.productCode}]", fontSize = 13.sp, color = Grey600)
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(quantity, { quantity = it }, label = { Text("数量 *") }, singleLine = true, modifier = Modifier.weight(1f))
+                    OutlinedTextField(unitPrice, { unitPrice = it }, label = { Text("单价") }, singleLine = true, modifier = Modifier.weight(1f))
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(enabled = quantity.isNotBlank(), onClick = {
+                onConfirm(quantity.toDoubleOrNull() ?: 1.0, unitPrice.toDoubleOrNull() ?: 0.0)
+            }) { Text("保存") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
+    )
 }
 
 @Composable

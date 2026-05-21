@@ -64,4 +64,15 @@ class PurchaseDetailViewModel(application: Application) : AndroidViewModel(appli
             _uiState.update { it.copy(order = order, items = items) }
         }
     }
-}
+
+
+    fun updateItem(orderId: Long, itemId: Long, quantity: Double, unitPrice: Double) {
+        viewModelScope.launch(Dispatchers.IO) {
+            purchaseRepo.updateItem(itemId, quantity, unitPrice)
+            val items = purchaseRepo.getItems(orderId)
+            val total = items.sumOf { it.subtotal }
+            purchaseRepo.updateTotalAmount(orderId, total)
+            val order = purchaseRepo.getOrderById(orderId)
+            _uiState.update { it.copy(order = order, items = items) }
+        }
+    }}

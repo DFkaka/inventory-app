@@ -18,5 +18,6 @@ class PurchaseRepository(context: Context) : BaseRepository(context) {
     fun insertItem(orderId: Long, productId: Long, quantity: Double, unitPrice: Double, barcode: String = "", unit: String = "个", spec: String = "") =
         dao.insertItem(orderId, productId, quantity, unitPrice, barcode, unit, spec)
     fun deleteItem(itemId: Long) = dao.deleteItem(itemId)
+    fun updateItem(itemId: Long, quantity: Double, unitPrice: Double) = dao.updateItem(itemId, quantity, unitPrice)
     fun updateTotalAmount(orderId: Long, totalAmount: Double) = dao.updateTotalAmount(orderId, totalAmount)
 }

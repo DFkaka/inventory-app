@@ -77,7 +77,16 @@ class SalesDao(private val db: SQLiteDatabase) {
         db.insert("sales_order_items", null, cv)
     }
 
-    fun deleteItem(itemId: Long) {
+    
+
+    fun updateItem(itemId: Long, quantity: Double, unitPrice: Double) {
+        val cv = ContentValues().apply {
+            put("quantity", quantity)
+            put("unit_price", unitPrice)
+            put("subtotal", quantity * unitPrice)
+        }
+        db.update("sales_order_items", cv, "id = ?", arrayOf(itemId.toString()))
+    }fun deleteItem(itemId: Long) {
         db.delete("sales_order_items", "id = ?", arrayOf(itemId.toString()))
     }
 

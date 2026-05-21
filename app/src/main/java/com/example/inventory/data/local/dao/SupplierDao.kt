@@ -1,4 +1,4 @@
-package com.example.inventory.data.local.dao
+﻿package com.example.inventory.data.local.dao
 
 import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
@@ -10,12 +10,21 @@ class SupplierDao(private val db: SQLiteDatabase) {
         val list = mutableListOf<Supplier>()
         val sql = if (keyword.isNotBlank())
             "SELECT * FROM suppliers WHERE code LIKE ? OR name LIKE ? ORDER BY code"
-        else "SELECT * FROM suppliers ORDER BY code"
-        val args = if (keyword.isNotBlank()) { val like = "%$keyword%"; arrayOf(like, like) } else null
+        else
+            "SELECT * FROM suppliers ORDER BY code"
+        val args = if (keyword.isNotBlank()) {
+            val like = "%$keyword%"
+            arrayOf(like, like)
+        } else null
+
         db.rawQuery(sql, args).use { cursor ->
             while (cursor.moveToNext()) {
-                list.add(Supplier(id = cursor.getLong(0), code = cursor.getString(1), name = cursor.getString(2),
-                    contact = cursor.getString(3), bankAccount = cursor.getString(4), note = cursor.getString(5), createdAt = cursor.getString(6)))
+                list.add(Supplier(
+                    id = cursor.getLong(0), code = cursor.getString(1),
+                    name = cursor.getString(2), contact = cursor.getString(3),
+                    bankAccount = cursor.getString(4), note = cursor.getString(5),
+                    createdAt = cursor.getString(6)
+                ))
             }
         }
         return list
@@ -23,37 +32,36 @@ class SupplierDao(private val db: SQLiteDatabase) {
 
     fun getById(id: Long): Supplier? {
         db.rawQuery("SELECT * FROM suppliers WHERE id = ?", arrayOf(id.toString())).use { cursor ->
-            if (cursor.moveToFirst()) return Supplier(id = cursor.getLong(0), code = cursor.getString(1),
-                name = cursor.getString(2), contact = cursor.getString(3), bankAccount = cursor.getString(4),
-                note = cursor.getString(5), createdAt = cursor.getString(6))
+            if (cursor.moveToFirst()) {
+                return Supplier(
+                    id = cursor.getLong(0), code = cursor.getString(1),
+                    name = cursor.getString(2), contact = cursor.getString(3),
+                    bankAccount = cursor.getString(4), note = cursor.getString(5),
+                    createdAt = cursor.getString(6)
+                )
+            }
         }
         return null
     }
 
-    fun generateCode(prefix: String = ""): String {
-        val codes = mutableSetOf<String>()
-        db.rawQuery("SELECT code FROM suppliers WHERE code LIKE ? ORDER BY code", arrayOf("$prefix%")).use { cursor ->
-            while (cursor.moveToNext()) codes.add(cursor.getString(0))
-        }
-        var num = 1
-        while (true) {
-            val code = prefix + "%04d".format(num)
-            if (code !in codes) return code
-            num++
-        }
-    }
-
     fun insert(code: String, name: String, contact: String = "", bankAccount: String = "", note: String = ""): Long {
         val cv = ContentValues().apply {
-            put("code", code); put("name", name); put("contact", contact)
-            put("bank_account", bankAccount); put("note", note)
+            put("code", code)
+            put("name", name)
+            put("contact", contact)
+            put("bank_account", bankAccount)
+            put("note", note)
         }
         return db.insert("suppliers", null, cv)
     }
 
-    fun delete(id: Long): Int = db.delete("suppliers", "id = ?", arrayOf(id.toString()))
+    fun delete(id: Long): Int {
+        return db.delete("suppliers", "id = ?", arrayOf(id.toString()))
+    }
 
     fun isCodeExists(code: String): Boolean {
-        return db.rawQuery("SELECT 1 FROM suppliers WHERE code = ?", arrayOf(code)).use { it.moveToFirst() }
+        db.rawQuery("SELECT 1 FROM suppliers WHERE code = ?", arrayOf(code)).use { cursor ->
+            return cursor.moveToFirst()
+        }
     }
 }

@@ -2,6 +2,8 @@
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -22,35 +24,34 @@ fun SearchableDropdown(
         else options.filter { it.contains(query, ignoreCase = true) }
 
     Box(modifier = modifier) {
-        ExposedDropdownMenuBox(
-            expanded = expanded && filteredOptions.isNotEmpty(),
-            onExpandedChange = { expanded = it }
-        ) {
-            OutlinedTextField(
-                value = query,
-                onValueChange = {
-                    onQueryChange(it)
-                    expanded = true
-                },
-                label = { Text(label) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth().menuAnchor(),
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }
-            )
-            ExposedDropdownMenu(
-                expanded = expanded && filteredOptions.isNotEmpty(),
-                onDismissRequest = { expanded = false }
-            ) {
-                filteredOptions.take(20).forEach { option ->
-                    DropdownMenuItem(
-                        text = { Text(option) },
-                        onClick = {
-                            onOptionSelected(option)
-                            expanded = false
-                        },
-                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-                    )
+        OutlinedTextField(
+            value = query,
+            onValueChange = { newValue ->
+                onQueryChange(newValue)
+                expanded = filteredOptions.isNotEmpty()
+            },
+            label = { Text(label) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            trailingIcon = {
+                IconButton(onClick = { expanded = !expanded }) {
+                    Icon(Icons.Default.ArrowDropDown, contentDescription = "展开")
                 }
+            }
+        )
+        DropdownMenu(
+            expanded = expanded && filteredOptions.isNotEmpty(),
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.fillMaxWidth(0.9f)
+        ) {
+            filteredOptions.take(20).forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option) },
+                    onClick = {
+                        onOptionSelected(option)
+                        expanded = false
+                    }
+                )
             }
         }
     }
