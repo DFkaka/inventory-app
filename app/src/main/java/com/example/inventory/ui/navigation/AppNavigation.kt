@@ -1,4 +1,4 @@
-ï»¿package com.example.inventory.ui.navigation
+package com.example.inventory.ui.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -20,17 +20,19 @@ import com.example.inventory.ui.home.HomeScreen
 import com.example.inventory.ui.inventory.InventoryScreen
 import com.example.inventory.ui.product.ProductDetailScreen
 import com.example.inventory.ui.purchase.PurchaseListScreen
+import com.example.inventory.ui.purchase_detail.PurchaseDetailScreen
 import com.example.inventory.ui.sales.SalesListScreen
+import com.example.inventory.ui.sales_detail.SalesDetailScreen
 import com.example.inventory.ui.supplier.SupplierManageScreen
 import com.example.inventory.ui.theme.Blue700
 import com.example.inventory.ui.theme.Grey600
 
 enum class MainTab(val route: String, val label: String) {
-    DASHBOARD("dashboard", "é¦–é¡µ"),
-    CATALOG("catalog", "èµ„æ–™"),
-    INVENTORY("inventory", "åº“å­˜"),
-    PURCHASE("purchase", "è¿›è´§"),
-    SALES("sales", "é”€å”®")
+    DASHBOARD("dashboard", "Ê×Ò³"),
+    CATALOG("catalog", "×ÊÁÏ"),
+    INVENTORY("inventory", "¿â´æ"),
+    PURCHASE("purchase", "½ø»õ"),
+    SALES("sales", "ÏúÊÛ")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,7 +46,7 @@ fun MainScreen() {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("è¿›é”€å­˜æŸ¥è¯¢", fontWeight = FontWeight.Bold) },
+                title = { Text("½øÏú´æ²éÑ¯", fontWeight = FontWeight.Bold) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
@@ -105,10 +107,16 @@ fun MainScreen() {
                 InventoryScreen(onProductClick = { id -> navController.navigate("product/$id") })
             }
             composable(MainTab.PURCHASE.route) {
-                PurchaseListScreen(onManageSupplier = { navController.navigate("supplier_manage") })
+                PurchaseListScreen(
+                    onOrderClick = { orderId -> navController.navigate("purchase_detail/$orderId") },
+                    onManageSupplier = { navController.navigate("supplier_manage") }
+                )
             }
             composable(MainTab.SALES.route) {
-                SalesListScreen(onManageCustomer = { navController.navigate("customer_manage") })
+                SalesListScreen(
+                    onOrderClick = { orderId -> navController.navigate("sales_detail/$orderId") },
+                    onManageCustomer = { navController.navigate("customer_manage") }
+                )
             }
             composable("supplier_manage") {
                 SupplierManageScreen(onBack = { navController.popBackStack() })
@@ -122,6 +130,24 @@ fun MainScreen() {
             ) { entry ->
                 ProductDetailScreen(
                     productId = entry.arguments?.getLong("productId") ?: 0L,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(
+                route = "purchase_detail/{orderId}",
+                arguments = listOf(navArgument("orderId") { type = NavType.LongType })
+            ) { entry ->
+                PurchaseDetailScreen(
+                    orderId = entry.arguments?.getLong("orderId") ?: 0L,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(
+                route = "sales_detail/{orderId}",
+                arguments = listOf(navArgument("orderId") { type = NavType.LongType })
+            ) { entry ->
+                SalesDetailScreen(
+                    orderId = entry.arguments?.getLong("orderId") ?: 0L,
                     onBack = { navController.popBackStack() }
                 )
             }

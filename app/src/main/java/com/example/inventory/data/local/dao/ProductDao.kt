@@ -17,10 +17,8 @@ class ProductDao(private val db: SQLiteDatabase) {
     fun search(keyword: String): List<Product> {
         val list = mutableListOf<Product>()
         val like = "%$keyword%"
-        db.rawQuery(
-            "SELECT * FROM products WHERE code LIKE ? OR name LIKE ? OR pinyin_code LIKE ? OR barcode LIKE ? ORDER BY code",
-            arrayOf(like, like, like, like)
-        ).use { cursor ->
+        db.rawQuery("SELECT * FROM products WHERE code LIKE ? OR name LIKE ? OR pinyin_code LIKE ? OR barcode LIKE ? ORDER BY code",
+            arrayOf(like, like, like, like)).use { cursor ->
             while (cursor.moveToNext()) list.add(mapCursor(cursor))
         }
         return list
@@ -45,14 +43,24 @@ class ProductDao(private val db: SQLiteDatabase) {
         val list = mutableListOf<Category>()
         db.rawQuery("SELECT * FROM categories ORDER BY id", null).use { cursor ->
             while (cursor.moveToNext()) {
-                list.add(Category(
-                    id = cursor.getLong(0), name = cursor.getString(1),
-                    parentId = if (cursor.isNull(2)) null else cursor.getLong(2),
-                    createdAt = cursor.getString(3)
-                ))
+                list.add(Category(id = cursor.getLong(0), name = cursor.getString(1),
+                    parentId = if (cursor.isNull(2)) null else cursor.getLong(2), createdAt = cursor.getString(3)))
             }
         }
         return list
+    }
+
+    fun generateCode(prefix: String = ""): String {
+        val codes = mutableSetOf<String>()
+        db.rawQuery("SELECT code FROM products WHERE code LIKE ? ORDER BY code", arrayOf("$prefix%")).use { cursor ->
+            while (cursor.moveToNext()) codes.add(cursor.getString(0))
+        }
+        var num = 1
+        while (true) {
+            val code = prefix + "%04d".format(num)
+            if (code !in codes) return code
+            num++
+        }
     }
 
     fun insert(code: String, name: String, barcode: String = "", pinyinCode: String = "",
@@ -60,17 +68,12 @@ class ProductDao(private val db: SQLiteDatabase) {
                retailPrice: Double = 0.0, wholesalePrice: Double = 0.0, costPrice: Double = 0.0,
                supplierCode: String = ""): Long {
         val cv = ContentValues().apply {
-            put("code", code)
-            put("name", name)
-            put("barcode", barcode)
+            put("code", code); put("name", name); put("barcode", barcode)
             put("pinyin_code", pinyinCode)
             if (categoryId != null) put("category_id", categoryId)
-            put("unit", unit)
-            put("spec", spec)
-            put("retail_price", retailPrice)
-            put("wholesale_price", wholesalePrice)
-            put("cost_price", costPrice)
-            put("supplier_code", supplierCode)
+            put("unit", unit); put("spec", spec)
+            put("retail_price", retailPrice); put("wholesale_price", wholesalePrice)
+            put("cost_price", costPrice); put("supplier_code", supplierCode)
         }
         return db.insert("products", null, cv)
     }

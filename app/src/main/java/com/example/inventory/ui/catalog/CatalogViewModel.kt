@@ -14,7 +14,8 @@ import kotlinx.coroutines.launch
 data class CatalogUiState(
     val products: List<Product> = emptyList(),
     val keyword: String = "",
-    val isLoading: Boolean = true
+    val isLoading: Boolean = false,
+    val hasSearched: Boolean = false
 )
 
 class CatalogViewModel(application: Application) : AndroidViewModel(application) {
@@ -24,15 +25,11 @@ class CatalogViewModel(application: Application) : AndroidViewModel(application)
     private val _uiState = MutableStateFlow(CatalogUiState())
     val uiState: StateFlow<CatalogUiState> = _uiState
 
-    init {
-        loadProducts()
-    }
-
-    fun loadProducts(keyword: String = "") {
-        _uiState.update { it.copy(keyword = keyword, isLoading = true) }
+    fun search(keyword: String) {
+        _uiState.update { it.copy(keyword = keyword, isLoading = true, hasSearched = true) }
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val products = if (keyword.isBlank()) repo.getAllProducts() else repo.searchProducts(keyword)
+                val products = if (keyword.isBlank()) emptyList() else repo.searchProducts(keyword)
                 _uiState.update { it.copy(products = products, isLoading = false) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false) }
@@ -40,7 +37,9 @@ class CatalogViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun search(keyword: String) {
-        loadProducts(keyword)
+    fun reload() {
+        if (_uiState.value.keyword.isNotBlank()) {
+            search(_uiState.value.keyword)
+        }
     }
 }

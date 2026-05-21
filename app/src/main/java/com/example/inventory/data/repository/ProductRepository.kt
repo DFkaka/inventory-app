@@ -14,6 +14,7 @@ class ProductRepository(context: Context) : BaseRepository(context) {
     fun getProductById(id: Long): Product? = dao.getById(id)
     fun getProductsByCategory(categoryId: Long): List<Product> = dao.getByCategory(categoryId)
     fun getAllCategories(): List<Category> = dao.getCategories()
+    fun generateCode(prefix: String = ""): String = dao.generateCode(prefix)
     fun insert(code: String, name: String, barcode: String = "", pinyinCode: String = "",
                categoryId: Long? = null, unit: String = "个", spec: String = "",
                retailPrice: Double = 0.0, wholesalePrice: Double = 0.0, costPrice: Double = 0.0,

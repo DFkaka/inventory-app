@@ -33,8 +33,6 @@ fun CatalogScreen(
     var searchText by remember { mutableStateOf("") }
     var showAddDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) { viewModel.loadProducts() }
-
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             SearchBar(
@@ -43,20 +41,21 @@ fun CatalogScreen(
                 placeholder = "模糊搜索：商品编码/名称/拼音码/条码"
             )
 
-            if (uiState.products.isNotEmpty()) {
-                Text("共 ${uiState.products.size} 条", fontSize = 12.sp, color = Grey600,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
-            }
-
             if (uiState.isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
+                }
+            } else if (!uiState.hasSearched) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("输入关键字搜索商品", color = Grey600, fontSize = 14.sp)
                 }
             } else if (uiState.products.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("未找到匹配商品", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             } else {
+                Text("共 ${uiState.products.size} 条", fontSize = 12.sp, color = Grey600,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
                 LazyColumn(
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -79,7 +78,7 @@ fun CatalogScreen(
     if (showAddDialog) {
         ProductEntryDialog(
             onDismiss = { showAddDialog = false },
-            onSaved = { viewModel.loadProducts() }
+            onSaved = { viewModel.reload() }
         )
     }
 }
@@ -129,16 +128,23 @@ fun ProductEntryDialog(onDismiss: () -> Unit, onSaved: () -> Unit) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
+    LaunchedEffect(Unit) {
+        scope.launch(Dispatchers.IO) {
+            val autoCode = ProductRepository(context).generateCode()
+            code = autoCode
+            barcode = autoCode
+        }
+    }
+
     AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("新增商品") },
+        onDismissRequest = onDismiss, title = { Text("新增商品") },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                OutlinedTextField(code, { code = it }, label = { Text("编码 *") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(code, {}, label = { Text("编码(自动)") }, singleLine = true, enabled = false, modifier = Modifier.fillMaxWidth())
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(name, { name = it }, label = { Text("名称 *") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 Spacer(modifier = Modifier.height(6.dp))
-                OutlinedTextField(barcode, { barcode = it }, label = { Text("条码") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(barcode, {}, label = { Text("条码(同编码)") }, singleLine = true, enabled = false, modifier = Modifier.fillMaxWidth())
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(unit, { unit = it }, label = { Text("单位") }, singleLine = true, modifier = Modifier.weight(1f))
@@ -153,7 +159,7 @@ fun ProductEntryDialog(onDismiss: () -> Unit, onSaved: () -> Unit) {
             }
         },
         confirmButton = {
-            TextButton(enabled = code.isNotBlank() && name.isNotBlank() && !isSaving, onClick = {
+            TextButton(enabled = name.isNotBlank() && !isSaving, onClick = {
                 isSaving = true
                 scope.launch(Dispatchers.IO) {
                     val repo = ProductRepository(context)

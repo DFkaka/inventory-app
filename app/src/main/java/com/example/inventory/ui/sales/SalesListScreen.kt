@@ -1,4 +1,4 @@
-ï»¿package com.example.inventory.ui.sales
+package com.example.inventory.ui.sales
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,6 +31,7 @@ import java.time.LocalDate
 
 @Composable
 fun SalesListScreen(
+    onOrderClick: (Long) -> Unit = {},
     onManageCustomer: () -> Unit = {},
     viewModel: SalesListViewModel = viewModel()
 ) {
@@ -47,38 +48,38 @@ fun SalesListScreen(
             SearchBar(
                 query = searchText,
                 onQueryChange = { searchText = it; viewModel.search(it) },
-                placeholder = "æœç´¢å•å·/å®¢æˆ·åç§°/ç¼–ç "
+                placeholder = "ËÑË÷µ¥ºÅ/¿Í»§Ãû³Æ/±àÂë"
             )
 
             Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("" to "å…¨éƒ¨", "å·²å®¡æ ¸" to "å·²å®¡æ ¸", "è‰ç¨¿" to "è‰ç¨¿").forEach { (value, label) ->
+                listOf("" to "È«²¿", "ÒÑÉóºË" to "ÒÑÉóºË", "²İ¸å" to "²İ¸å").forEach { (value, label) ->
                     FilterChip(selected = selectedStatus == value, onClick = { selectedStatus = value; viewModel.filter(value) }, label = { Text(label, fontSize = 12.sp) })
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 TextButton(onClick = { showDatePicker = true }, contentPadding = PaddingValues(horizontal = 8.dp)) {
                     Icon(Icons.Default.DateRange, null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(if (dateFrom.isNotBlank()) "$dateFrom~$dateTo" else "æ—¥æœŸ", fontSize = 12.sp)
+                    Text(if (dateFrom.isNotBlank()) "$dateFrom~$dateTo" else "ÈÕÆÚ", fontSize = 12.sp)
                 }
                 IconButton(onClick = onManageCustomer, modifier = Modifier.size(32.dp)) {
-                    Icon(Icons.Default.People, "å®¢æˆ·ç®¡ç†", modifier = Modifier.size(18.dp), tint = Teal500)
+                    Icon(Icons.Default.People, "¿Í»§¹ÜÀí", modifier = Modifier.size(18.dp), tint = Teal500)
                 }
             }
 
             if (uiState.isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             } else if (uiState.orders.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("æš‚æ— é”€å”®å•", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("ÔİÎŞÏúÊÛµ¥", color = MaterialTheme.colorScheme.onSurfaceVariant) }
             } else {
-                Text("å…± ${uiState.orders.size} æ¡", fontSize = 12.sp, color = Grey600, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+                Text("¹² ${uiState.orders.size} Ìõ", fontSize = 12.sp, color = Grey600, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
                 LazyColumn(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(uiState.orders, key = { it.id }) { order -> SalesOrderCard(order) }
+                    items(uiState.orders, key = { it.id }) { order -> SalesOrderCard(order, onClick = { onOrderClick(order.id) }) }
                 }
             }
         }
 
         FloatingActionButton(onClick = { showAddDialog = true }, modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)) {
-            Icon(Icons.Default.Add, "æ–°å¢é”€å”®å•")
+            Icon(Icons.Default.Add, "ĞÂÔöÏúÊÛµ¥")
         }
     }
 
@@ -86,40 +87,40 @@ fun SalesListScreen(
 
     if (showDatePicker) {
         AlertDialog(
-            onDismissRequest = { showDatePicker = false }, title = { Text("æ—¥æœŸèŒƒå›´") },
+            onDismissRequest = { showDatePicker = false }, title = { Text("ÈÕÆÚ·¶Î§") },
             text = {
                 Column {
-                    OutlinedTextField(dateFrom, { dateFrom = it }, label = { Text("å¼€å§‹") }, placeholder = { Text("2025-01-01") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(dateFrom, { dateFrom = it }, label = { Text("¿ªÊ¼") }, placeholder = { Text("2025-01-01") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                     Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(dateTo, { dateTo = it }, label = { Text("ç»“æŸ") }, placeholder = { Text("2025-12-31") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(dateTo, { dateTo = it }, label = { Text("½áÊø") }, placeholder = { Text("2025-12-31") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 }
             },
-            confirmButton = { TextButton(onClick = { viewModel.filterDate(dateFrom, dateTo); showDatePicker = false }) { Text("ç¡®å®š") } },
-            dismissButton = { TextButton(onClick = { dateFrom = ""; dateTo = ""; viewModel.filterDate("", ""); showDatePicker = false }) { Text("æ¸…é™¤") } }
+            confirmButton = { TextButton(onClick = { viewModel.filterDate(dateFrom, dateTo); showDatePicker = false }) { Text("È·¶¨") } },
+            dismissButton = { TextButton(onClick = { dateFrom = ""; dateTo = ""; viewModel.filterDate("", ""); showDatePicker = false }) { Text("Çå³ı") } }
         )
     }
 }
 
 @Composable
-fun SalesOrderCard(order: SalesOrder) {
-    Card(shape = RoundedCornerShape(8.dp), elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
+fun SalesOrderCard(order: SalesOrder, onClick: () -> Unit = {}) {
+    Card(onClick = onClick, shape = RoundedCornerShape(8.dp), elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text(order.orderNo, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                StatusBadge(label = when (order.status) { "draft" -> "è‰ç¨¿"; "shipped" -> "å·²å®¡æ ¸"; "cancelled" -> "å·²å–æ¶ˆ"; else -> order.status }, color = when (order.status) { "shipped" -> Green500; "cancelled" -> Red500; else -> Grey600 })
+                StatusBadge(label = when (order.status) { "draft" -> "²İ¸å"; "shipped" -> "ÒÑÉóºË"; "cancelled" -> "ÒÑÈ¡Ïû"; else -> order.status }, color = when (order.status) { "shipped" -> Green500; "cancelled" -> Red500; else -> Grey600 })
             }
             Spacer(modifier = Modifier.height(6.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("å®¢æˆ·: ${order.customer}", fontSize = 13.sp)
+                Text("¿Í»§: ${order.customer}", fontSize = 13.sp)
                 Text(order.orderDate, fontSize = 12.sp, color = Grey600)
             }
             Spacer(modifier = Modifier.height(6.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("Â¥%.2f".format(order.totalAmount), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Green500)
+                Text("£¤%.2f".format(order.totalAmount), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Green500)
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("å·²ä»˜: Â¥%.2f".format(order.paidAmount), fontSize = 12.sp, color = Grey600)
+                    Text("ÒÑ¸¶: £¤%.2f".format(order.paidAmount), fontSize = 12.sp, color = Grey600)
                     Spacer(modifier = Modifier.width(8.dp))
-                    StatusBadge(label = order.paymentStatus, color = if (order.paymentStatus == "å·²ç»“å•") Green500 else Orange500)
+                    StatusBadge(label = order.paymentStatus, color = if (order.paymentStatus == "ÒÑ½áµ¥") Green500 else Orange500)
                 }
             }
         }
@@ -157,11 +158,11 @@ fun SalesEntryDialog(onDismiss: () -> Unit, onSaved: () -> Unit) {
     }
 
     AlertDialog(
-        onDismissRequest = onDismiss, title = { Text("æ–°å¢é”€å”®å•") },
+        onDismissRequest = onDismiss, title = { Text("ĞÂÔöÏúÊÛµ¥") },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 SearchableDropdown(
-                    label = "å®¢æˆ· *",
+                    label = "¿Í»§ *",
                     query = customerQuery,
                     onQueryChange = { customerQuery = it },
                     options = customerOptions,
@@ -169,14 +170,14 @@ fun SalesEntryDialog(onDismiss: () -> Unit, onSaved: () -> Unit) {
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(6.dp))
-                OutlinedTextField(orderDate, { orderDate = it }, label = { Text("æ—¥æœŸ") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(orderDate, { orderDate = it }, label = { Text("ÈÕÆÚ") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 Spacer(modifier = Modifier.height(6.dp))
-                OutlinedTextField(note, { note = it }, label = { Text("å¤‡æ³¨") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(note, { note = it }, label = { Text("±¸×¢") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                Text("æ·»åŠ å•†å“", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text("Ìí¼ÓÉÌÆ·", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(4.dp))
                 SearchableDropdown(
-                    label = "å•†å“ *",
+                    label = "ÉÌÆ· *",
                     query = productQuery,
                     onQueryChange = { productQuery = it },
                     options = productOptions,
@@ -185,8 +186,8 @@ fun SalesEntryDialog(onDismiss: () -> Unit, onSaved: () -> Unit) {
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(quantity, { quantity = it }, label = { Text("æ•°é‡ *") }, singleLine = true, modifier = Modifier.weight(1f))
-                    OutlinedTextField(unitPrice, { unitPrice = it }, label = { Text("å•ä»·") }, singleLine = true, modifier = Modifier.weight(1f))
+                    OutlinedTextField(quantity, { quantity = it }, label = { Text("ÊıÁ¿ *") }, singleLine = true, modifier = Modifier.weight(1f))
+                    OutlinedTextField(unitPrice, { unitPrice = it }, label = { Text("µ¥¼Û") }, singleLine = true, modifier = Modifier.weight(1f))
                 }
             }
         },
@@ -203,8 +204,8 @@ fun SalesEntryDialog(onDismiss: () -> Unit, onSaved: () -> Unit) {
                     salesRepo.insert(orderNo, customerName, orderDate, total, "draft", note)
                     scope.launch(Dispatchers.Main) { onSaved(); onDismiss() }
                 }
-            }) { Text(if (isSaving) "ä¿å­˜ä¸­..." else "ä¿å­˜") }
+            }) { Text(if (isSaving) "±£´æÖĞ..." else "±£´æ") }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("å–æ¶ˆ") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text("È¡Ïû") } }
     )
 }
