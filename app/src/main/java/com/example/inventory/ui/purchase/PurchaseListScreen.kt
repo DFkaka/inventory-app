@@ -18,9 +18,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.inventory.data.local.model.PurchaseOrder
+import com.example.inventory.data.local.model.Supplier
+import com.example.inventory.data.repository.ProductRepository
 import com.example.inventory.data.repository.PurchaseRepository
 import com.example.inventory.data.repository.SupplierRepository
 import com.example.inventory.ui.component.SearchBar
+import com.example.inventory.ui.component.SearchableDropdown
 import com.example.inventory.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -47,16 +50,9 @@ fun PurchaseListScreen(
                 placeholder = "搜索单号/供应商名称/编码"
             )
 
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("" to "全部", "已审核" to "已审核", "草稿" to "草稿").forEach { (value, label) ->
-                    FilterChip(
-                        selected = selectedStatus == value,
-                        onClick = { selectedStatus = value; viewModel.filter(value) },
-                        label = { Text(label, fontSize = 12.sp) }
-                    )
+                    FilterChip(selected = selectedStatus == value, onClick = { selectedStatus = value; viewModel.filter(value) }, label = { Text(label, fontSize = 12.sp) })
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 TextButton(onClick = { showDatePicker = true }, contentPadding = PaddingValues(horizontal = 8.dp)) {
@@ -70,44 +66,27 @@ fun PurchaseListScreen(
             }
 
             if (uiState.isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             } else if (uiState.orders.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("暂无进货单", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("暂无进货单", color = MaterialTheme.colorScheme.onSurfaceVariant) }
             } else {
-                Text("共 ${uiState.orders.size} 条", fontSize = 12.sp, color = Grey600,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
-                LazyColumn(
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                Text("共 ${uiState.orders.size} 条", fontSize = 12.sp, color = Grey600, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+                LazyColumn(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(uiState.orders, key = { it.id }) { order -> OrderCard(order) }
                 }
             }
         }
 
-        FloatingActionButton(
-            onClick = { showAddDialog = true },
-            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)
-        ) {
+        FloatingActionButton(onClick = { showAddDialog = true }, modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)) {
             Icon(Icons.Default.Add, "新增进货单")
         }
     }
 
-    if (showAddDialog) {
-        PurchaseEntryDialog(
-            onDismiss = { showAddDialog = false },
-            onSaved = { viewModel.loadOrders() }
-        )
-    }
+    if (showAddDialog) { PurchaseEntryDialog(onDismiss = { showAddDialog = false }, onSaved = { viewModel.loadOrders() }) }
 
     if (showDatePicker) {
         AlertDialog(
-            onDismissRequest = { showDatePicker = false },
-            title = { Text("日期范围") },
+            onDismissRequest = { showDatePicker = false }, title = { Text("日期范围") },
             text = {
                 Column {
                     OutlinedTextField(dateFrom, { dateFrom = it }, label = { Text("开始") }, placeholder = { Text("2025-01-01") }, singleLine = true, modifier = Modifier.fillMaxWidth())
@@ -123,25 +102,11 @@ fun PurchaseListScreen(
 
 @Composable
 fun OrderCard(order: PurchaseOrder) {
-    Card(
-        shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
+    Card(shape = RoundedCornerShape(8.dp), elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text(order.orderNo, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                StatusBadge(
-                    label = when (order.status) {
-                        "draft" -> "草稿"; "received" -> "已审核"; "cancelled" -> "已取消"; else -> order.status
-                    },
-                    color = when (order.status) {
-                        "received" -> Green500; "cancelled" -> Red500; else -> Grey600
-                    }
-                )
+                StatusBadge(label = when (order.status) { "draft" -> "草稿"; "received" -> "已审核"; "cancelled" -> "已取消"; else -> order.status }, color = when (order.status) { "received" -> Green500; "cancelled" -> Red500; else -> Grey600 })
             }
             Spacer(modifier = Modifier.height(6.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -149,20 +114,12 @@ fun OrderCard(order: PurchaseOrder) {
                 Text(order.orderDate, fontSize = 12.sp, color = Grey600)
             }
             Spacer(modifier = Modifier.height(6.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("¥%.2f".format(order.totalAmount), fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold, color = Orange500)
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text("¥%.2f".format(order.totalAmount), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Orange500)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("已付: ¥%.2f".format(order.paidAmount), fontSize = 12.sp, color = Grey600)
                     Spacer(modifier = Modifier.width(8.dp))
-                    StatusBadge(
-                        label = order.paymentStatus,
-                        color = if (order.paymentStatus == "已结单") Green500 else Orange500
-                    )
+                    StatusBadge(label = order.paymentStatus, color = if (order.paymentStatus == "已结单") Green500 else Orange500)
                 }
             }
         }
@@ -172,32 +129,52 @@ fun OrderCard(order: PurchaseOrder) {
 @Composable
 fun StatusBadge(label: String, color: androidx.compose.ui.graphics.Color) {
     Surface(shape = RoundedCornerShape(4.dp), color = color.copy(alpha = 0.1f)) {
-        Text(text = label, color = color, fontSize = 11.sp, fontWeight = FontWeight.Medium,
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+        Text(text = label, color = color, fontSize = 11.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
     }
 }
 
 @Composable
-fun PurchaseEntryDialog(
-    onDismiss: () -> Unit,
-    onSaved: () -> Unit
-) {
-    var supplier by remember { mutableStateOf("") }
+fun PurchaseEntryDialog(onDismiss: () -> Unit, onSaved: () -> Unit) {
+    var supplierQuery by remember { mutableStateOf("") }
+    var supplierOptions by remember { mutableStateOf(listOf<String>()) }
+    var selectedSupplier by remember { mutableStateOf("") }
     var orderDate by remember { mutableStateOf(LocalDate.now().toString()) }
     var note by remember { mutableStateOf("") }
-    var productName by remember { mutableStateOf("") }
+    var productQuery by remember { mutableStateOf("") }
+    var productOptions by remember { mutableStateOf(listOf<String>()) }
+    var selectedProduct by remember { mutableStateOf("") }
     var quantity by remember { mutableStateOf("") }
     var unitPrice by remember { mutableStateOf("") }
     var isSaving by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
+    LaunchedEffect(supplierQuery) {
+        scope.launch(Dispatchers.IO) {
+            val suppliers = SupplierRepository(context).getAllSuppliers(supplierQuery)
+            supplierOptions = suppliers.map { "${it.code} | ${it.name}" }
+        }
+    }
+
+    LaunchedEffect(productQuery) {
+        scope.launch(Dispatchers.IO) {
+            val products = ProductRepository(context).searchProducts(productQuery)
+            productOptions = products.map { "${it.code} | ${it.name}" }
+        }
+    }
+
     AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("新增进货单") },
+        onDismissRequest = onDismiss, title = { Text("新增进货单") },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                OutlinedTextField(supplier, { supplier = it }, label = { Text("供应商名称 *") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                SearchableDropdown(
+                    label = "供应商 *",
+                    query = supplierQuery,
+                    onQueryChange = { supplierQuery = it },
+                    options = supplierOptions,
+                    onOptionSelected = { selectedSupplier = it; supplierQuery = it },
+                    modifier = Modifier.fillMaxWidth()
+                )
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(orderDate, { orderDate = it }, label = { Text("日期") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 Spacer(modifier = Modifier.height(6.dp))
@@ -205,7 +182,15 @@ fun PurchaseEntryDialog(
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 Text("添加商品", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(4.dp))
-                OutlinedTextField(productName, { productName = it }, label = { Text("商品名称 *") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                SearchableDropdown(
+                    label = "商品 *",
+                    query = productQuery,
+                    onQueryChange = { productQuery = it },
+                    options = productOptions,
+                    onOptionSelected = { selectedProduct = it; productQuery = it },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(quantity, { quantity = it }, label = { Text("数量 *") }, singleLine = true, modifier = Modifier.weight(1f))
                     OutlinedTextField(unitPrice, { unitPrice = it }, label = { Text("单价") }, singleLine = true, modifier = Modifier.weight(1f))
@@ -213,27 +198,19 @@ fun PurchaseEntryDialog(
             }
         },
         confirmButton = {
-            TextButton(
-                enabled = supplier.isNotBlank() && productName.isNotBlank() && quantity.isNotBlank() && !isSaving,
-                onClick = {
-                    isSaving = true
-                    scope.launch(Dispatchers.IO) {
-                        val purchaseRepo = PurchaseRepository(context)
-                        val supplierRepo = SupplierRepository(context)
-                        val suppliers = supplierRepo.getAllSuppliers(supplier)
-                        val supplierName = if (suppliers.isNotEmpty()) suppliers.first().name else supplier
-                        val orderNo = "PO-${LocalDate.now().toString().replace("-", "")}-${System.currentTimeMillis() % 100000}"
-                        val qty = quantity.toDoubleOrNull() ?: 1.0
-                        val price = unitPrice.toDoubleOrNull() ?: 0.0
-                        val total = qty * price
-                        val orderId = purchaseRepo.insert(orderNo, supplierName, orderDate, total, "draft", note)
-                        scope.launch(Dispatchers.Main) {
-                            onSaved()
-                            onDismiss()
-                        }
-                    }
+            TextButton(enabled = selectedSupplier.isNotBlank() && selectedProduct.isNotBlank() && quantity.isNotBlank() && !isSaving, onClick = {
+                isSaving = true
+                scope.launch(Dispatchers.IO) {
+                    val purchaseRepo = PurchaseRepository(context)
+                    val supplierName = selectedSupplier.substringAfter("| ").trim()
+                    val orderNo = "PO-${LocalDate.now().toString().replace("-", "")}-${System.currentTimeMillis() % 100000}"
+                    val qty = quantity.toDoubleOrNull() ?: 1.0
+                    val price = unitPrice.toDoubleOrNull() ?: 0.0
+                    val total = qty * price
+                    purchaseRepo.insert(orderNo, supplierName, orderDate, total, "draft", note)
+                    scope.launch(Dispatchers.Main) { onSaved(); onDismiss() }
                 }
-            ) { Text(if (isSaving) "保存中..." else "保存") }
+            }) { Text(if (isSaving) "保存中..." else "保存") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
     )

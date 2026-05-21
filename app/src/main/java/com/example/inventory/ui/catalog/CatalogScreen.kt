@@ -33,6 +33,8 @@ fun CatalogScreen(
     var searchText by remember { mutableStateOf("") }
     var showAddDialog by remember { mutableStateOf(false) }
 
+    LaunchedEffect(Unit) { viewModel.loadProducts() }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             SearchBar(
@@ -84,23 +86,13 @@ fun CatalogScreen(
 
 @Composable
 fun ProductCard(product: Product) {
-    Card(
-        shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
+    Card(shape = RoundedCornerShape(8.dp), elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(product.name, fontWeight = FontWeight.Bold, fontSize = 15.sp,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text(product.name, fontWeight = FontWeight.Bold, fontSize = 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                 Text(product.code, fontSize = 12.sp, color = Grey600)
             }
-            if (product.spec.isNotBlank()) {
-                Text("规格: ${product.spec}", fontSize = 12.sp, color = Grey600, modifier = Modifier.padding(top = 2.dp))
-            }
+            if (product.spec.isNotBlank()) Text("规格: ${product.spec}", fontSize = 12.sp, color = Grey600, modifier = Modifier.padding(top = 2.dp))
             Spacer(modifier = Modifier.height(8.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 PriceTag("成本价", product.costPrice, Orange500)
@@ -124,10 +116,7 @@ fun PriceTag(label: String, price: Double, color: androidx.compose.ui.graphics.C
 }
 
 @Composable
-fun ProductEntryDialog(
-    onDismiss: () -> Unit,
-    onSaved: () -> Unit
-) {
+fun ProductEntryDialog(onDismiss: () -> Unit, onSaved: () -> Unit) {
     var code by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var barcode by remember { mutableStateOf("") }
@@ -164,26 +153,17 @@ fun ProductEntryDialog(
             }
         },
         confirmButton = {
-            TextButton(
-                enabled = code.isNotBlank() && name.isNotBlank() && !isSaving,
-                onClick = {
-                    isSaving = true
-                    scope.launch(Dispatchers.IO) {
-                        val repo = ProductRepository(context)
-                        repo.insert(
-                            code = code, name = name, barcode = barcode,
-                            unit = unit, spec = spec,
-                            costPrice = costPrice.toDoubleOrNull() ?: 0.0,
-                            wholesalePrice = wholesalePrice.toDoubleOrNull() ?: 0.0,
-                            retailPrice = retailPrice.toDoubleOrNull() ?: 0.0
-                        )
-                        scope.launch(Dispatchers.Main) {
-                            onSaved()
-                            onDismiss()
-                        }
-                    }
+            TextButton(enabled = code.isNotBlank() && name.isNotBlank() && !isSaving, onClick = {
+                isSaving = true
+                scope.launch(Dispatchers.IO) {
+                    val repo = ProductRepository(context)
+                    repo.insert(code = code, name = name, barcode = barcode, unit = unit, spec = spec,
+                        costPrice = costPrice.toDoubleOrNull() ?: 0.0,
+                        wholesalePrice = wholesalePrice.toDoubleOrNull() ?: 0.0,
+                        retailPrice = retailPrice.toDoubleOrNull() ?: 0.0)
+                    scope.launch(Dispatchers.Main) { onSaved(); onDismiss() }
                 }
-            ) { Text(if (isSaving) "保存中..." else "保存") }
+            }) { Text(if (isSaving) "保存中..." else "保存") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
     )
