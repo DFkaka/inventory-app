@@ -1,10 +1,19 @@
 ﻿package com.example.inventory.ui.navigation
 
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.inventory.ui.catalog.CatalogScreen
 import com.example.inventory.ui.home.HomeScreen
@@ -12,64 +21,107 @@ import com.example.inventory.ui.inventory.InventoryScreen
 import com.example.inventory.ui.product.ProductDetailScreen
 import com.example.inventory.ui.purchase.PurchaseListScreen
 import com.example.inventory.ui.sales.SalesListScreen
+import com.example.inventory.ui.theme.Blue700
+import com.example.inventory.ui.theme.Grey600
 
-object Routes {
-    const val HOME = "home"
-    const val CATALOG = "catalog"
-    const val INVENTORY = "inventory"
-    const val PRODUCT_DETAIL = "product/{productId}"
-    const val PURCHASE = "purchase"
-    const val SALES = "sales"
-
-    fun productDetail(id: Long) = "product/$id"
+enum class MainTab(val route: String, val label: String) {
+    DASHBOARD("dashboard", "首页"),
+    CATALOG("catalog", "资料"),
+    INVENTORY("inventory", "库存"),
+    PURCHASE("purchase", "进货"),
+    SALES("sales", "销售")
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppNavigation(navController: NavHostController) {
-    NavHost(
-        navController = navController,
-        startDestination = Routes.HOME
-    ) {
-        composable(Routes.HOME) {
-            HomeScreen(
-                onNavigate = { route -> navController.navigate(route) }
-            )
-        }
+fun MainScreen() {
+    val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
-        composable(Routes.CATALOG) {
-            CatalogScreen(
-                onBack = { navController.popBackStack() }
-            )
-        }
+    val showBottomBar = currentRoute in MainTab.entries.map { it.route }
 
-        composable(Routes.INVENTORY) {
-            InventoryScreen(
-                onBack = { navController.popBackStack() },
-                onProductClick = { id -> navController.navigate(Routes.productDetail(id)) }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("进销存查询", fontWeight = FontWeight.Bold) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                )
             )
+        },
+        bottomBar = {
+            if (showBottomBar) {
+                NavigationBar {
+                    MainTab.entries.forEach { tab ->
+                        val selected = currentRoute == tab.route
+                        NavigationBarItem(
+                            selected = selected,
+                            onClick = {
+                                if (!selected) {
+                                    navController.navigate(tab.route) {
+                                        popUpTo(MainTab.DASHBOARD.route) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                }
+                            },
+                            icon = {
+                                Icon(
+                                    when (tab) {
+                                        MainTab.DASHBOARD -> Icons.Default.Dashboard
+                                        MainTab.CATALOG -> Icons.Default.Search
+                                        MainTab.INVENTORY -> Icons.Default.Inventory
+                                        MainTab.PURCHASE -> Icons.Default.ShoppingCart
+                                        MainTab.SALES -> Icons.Default.TrendingUp
+                                    },
+                                    contentDescription = tab.label
+                                )
+                            },
+                            label = { Text(tab.label) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = Blue700,
+                                selectedTextColor = Blue700,
+                                unselectedIconColor = Grey600,
+                                unselectedTextColor = Grey600
+                            )
+                        )
+                    }
+                }
+            }
         }
-
-        composable(
-            route = Routes.PRODUCT_DETAIL,
-            arguments = listOf(navArgument("productId") { type = NavType.LongType })
-        ) { backStackEntry ->
-            val productId = backStackEntry.arguments?.getLong("productId") ?: 0L
-            ProductDetailScreen(
-                productId = productId,
-                onBack = { navController.popBackStack() }
-            )
-        }
-
-        composable(Routes.PURCHASE) {
-            PurchaseListScreen(
-                onBack = { navController.popBackStack() }
-            )
-        }
-
-        composable(Routes.SALES) {
-            SalesListScreen(
-                onBack = { navController.popBackStack() }
-            )
+    ) { padding ->
+        NavHost(
+            navController = navController,
+            startDestination = MainTab.DASHBOARD.route,
+            modifier = Modifier.padding(padding)
+        ) {
+            composable(MainTab.DASHBOARD.route) {
+                HomeScreen(onNavigate = { id -> navController.navigate("product/$id") })
+            }
+            composable(MainTab.CATALOG.route) {
+                CatalogScreen()
+            }
+            composable(MainTab.INVENTORY.route) {
+                InventoryScreen(onProductClick = { id -> navController.navigate("product/$id") })
+            }
+            composable(MainTab.PURCHASE.route) {
+                PurchaseListScreen()
+            }
+            composable(MainTab.SALES.route) {
+                SalesListScreen()
+            }
+            composable(
+                route = "product/{productId}",
+                arguments = listOf(navArgument("productId") { type = NavType.LongType })
+            ) { entry ->
+                val productId = entry.arguments?.getLong("productId") ?: 0L
+                ProductDetailScreen(
+                    productId = productId,
+                    onBack = { navController.popBackStack() }
+                )
+            }
         }
     }
 }

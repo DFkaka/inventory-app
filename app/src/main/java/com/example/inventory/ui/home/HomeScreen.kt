@@ -4,110 +4,56 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.inventory.ui.component.StatCard
 import com.example.inventory.ui.theme.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    onNavigate: (String) -> Unit,
+    onNavigate: (Long) -> Unit = {},
     viewModel: HomeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("进销存查询", fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            )
+    if (uiState.isLoading) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
         }
-    ) { padding ->
-        if (uiState.isLoading) {
-            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        StatCard("商品数", uiState.productCount.toString(), Blue700, Modifier.weight(1f))
-                        StatCard("库存成本", "¥%.0f".format(uiState.totalCost), Orange500, Modifier.weight(1f))
-                        StatCard("库存市值", "¥%.0f".format(uiState.totalRetail), Green500, Modifier.weight(1f))
-                    }
-                }
-
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        StatCard("累计采购", "¥%.0f".format(uiState.purchaseTotal), Blue700, Modifier.weight(1f))
-                        StatCard("累计销售", "¥%.0f".format(uiState.salesTotal), Teal500, Modifier.weight(1f))
-                        StatCard("库存预警", uiState.lowStockCount.toString(),
-                            if (uiState.lowStockCount > 0) Red500 else Green500, Modifier.weight(1f))
-                    }
-                }
-
-                item {
-                    Text("功能菜单", fontSize = 16.sp, fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(top = 8.dp))
-                }
-
-                item { MenuCard("商品资料查询", "编码/名称/拼音/条码模糊搜索", Icons.Default.Search, Blue700) { onNavigate("catalog") } }
-                item { MenuCard("库存总览", "查看所有商品库存状态", Icons.Default.Inventory, Orange500) { onNavigate("inventory") } }
-                item { MenuCard("进货单", "采购订单查询", Icons.Default.ShoppingCart, Red500) { onNavigate("purchase") } }
-                item { MenuCard("销售单", "销售订单查询", Icons.Default.PointOfSale, Green500) { onNavigate("sales") } }
-            }
-        }
-    }
-}
-
-@Composable
-fun MenuCard(
-    title: String,
-    subtitle: String,
-    icon: ImageVector,
-    color: androidx.compose.ui.graphics.Color,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Icon(imageVector = icon, contentDescription = null, tint = color, modifier = Modifier.size(40.dp))
-            Spacer(modifier = Modifier.width(16.dp))
-            Column {
-                Text(title, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Text(subtitle, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    StatCard("商品数", uiState.productCount.toString(), Blue700, Modifier.weight(1f))
+                    StatCard("库存成本", "¥%.0f".format(uiState.totalCost), Orange500, Modifier.weight(1f))
+                    StatCard("库存市值", "¥%.0f".format(uiState.totalRetail), Green500, Modifier.weight(1f))
+                }
+            }
+
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    StatCard("累计采购", "¥%.0f".format(uiState.purchaseTotal), Blue700, Modifier.weight(1f))
+                    StatCard("累计销售", "¥%.0f".format(uiState.salesTotal), Teal500, Modifier.weight(1f))
+                    StatCard("库存预警", uiState.lowStockCount.toString(),
+                        if (uiState.lowStockCount > 0) Red500 else Green500, Modifier.weight(1f))
+                }
             }
         }
     }
