@@ -1,6 +1,5 @@
 ﻿package com.example.inventory.ui.component
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -9,7 +8,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchableDropdown(
     label: String,
@@ -28,7 +26,7 @@ fun SearchableDropdown(
             value = query,
             onValueChange = { newValue ->
                 onQueryChange(newValue)
-                expanded = filteredOptions.isNotEmpty()
+                expanded = true
             },
             label = { Text(label) },
             singleLine = true,
@@ -40,18 +38,26 @@ fun SearchableDropdown(
             }
         )
         DropdownMenu(
-            expanded = expanded && filteredOptions.isNotEmpty(),
+            expanded = expanded,
             onDismissRequest = { expanded = false },
             modifier = Modifier.fillMaxWidth(0.9f)
         ) {
-            filteredOptions.take(20).forEach { option ->
+            if (filteredOptions.isEmpty()) {
                 DropdownMenuItem(
-                    text = { Text(option) },
-                    onClick = {
-                        onOptionSelected(option)
-                        expanded = false
-                    }
+                    text = { Text("暂无数据", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                    onClick = { expanded = false },
+                    enabled = false
                 )
+            } else {
+                filteredOptions.take(20).forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option) },
+                        onClick = {
+                            onOptionSelected(option)
+                            expanded = false
+                        }
+                    )
+                }
             }
         }
     }

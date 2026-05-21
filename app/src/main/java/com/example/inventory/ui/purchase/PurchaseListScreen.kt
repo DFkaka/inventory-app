@@ -27,6 +27,7 @@ import com.example.inventory.ui.component.SearchableDropdown
 import com.example.inventory.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 
 @Composable
@@ -38,8 +39,8 @@ fun PurchaseListScreen(
     val uiState by viewModel.uiState.collectAsState()
     var searchText by remember { mutableStateOf("") }
     var selectedStatus by remember { mutableStateOf("") }
-    var dateFrom by remember { mutableStateOf("") }
-    var dateTo by remember { mutableStateOf("") }
+    var dateFrom by remember { mutableStateOf(LocalDate.now().toString()) }
+    var dateTo by remember { mutableStateOf(LocalDate.now().toString()) }
     var showDatePicker by remember { mutableStateOf(false) }
     var showAddDialog by remember { mutableStateOf(false) }
 
@@ -157,7 +158,7 @@ fun PurchaseEntryDialog(onDismiss: () -> Unit, onSaved: () -> Unit) {
         }
     }
 
-    LaunchedEffect(productQuery) {
+    LaunchedEffect(supplierQuery) {
         scope.launch(Dispatchers.IO) {
             val products = ProductRepository(context).searchProducts(productQuery)
             productOptions = products.map { "${it.code} | ${it.name}" }

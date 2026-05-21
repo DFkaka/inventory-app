@@ -52,4 +52,10 @@ class SupplierManageViewModel(application: Application) : AndroidViewModel(appli
             loadSuppliers(_uiState.value.keyword)
         }
     }
+    fun update(id: Long, name: String, contact: String, bank: String, note: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repo.update(id, name, contact, bank, note)
+            loadSuppliers(_uiState.value.keyword)
+        }
+    }
 }

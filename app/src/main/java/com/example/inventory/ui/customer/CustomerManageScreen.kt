@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.inventory.data.local.model.Customer
 import com.example.inventory.data.repository.CustomerRepository
 import com.example.inventory.ui.component.SearchBar
 import com.example.inventory.ui.theme.*
@@ -31,6 +32,7 @@ fun CustomerManageScreen(
     val uiState by viewModel.uiState.collectAsState()
     var searchText by remember { mutableStateOf("") }
     var showAddDialog by remember { mutableStateOf(false) }
+    var editingCustomer by remember { mutableStateOf<Customer?>(null) }
     var deleteConfirmId by remember { mutableStateOf<Long?>(null) }
 
     Scaffold(
@@ -52,7 +54,7 @@ fun CustomerManageScreen(
             } else {
                 LazyColumn(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(uiState.customers, key = { it.id }) { c ->
-                        CustomerRow(customer = c, onDelete = { deleteConfirmId = c.id })
+                        CustomerRow(customer = c, onEdit = { editingCustomer = c }, onDelete = { deleteConfirmId = c.id })
                     }
                 }
             }
@@ -60,6 +62,10 @@ fun CustomerManageScreen(
     }
 
     if (showAddDialog) AddCustomerDialog(onDismiss = { showAddDialog = false }, onConfirm = { code, name, contact, phone, addr, note -> viewModel.insert(code, name, contact, phone, addr, note); showAddDialog = false })
+
+    editingCustomer?.let { c ->
+        EditCustomerDialog(customer = c, onDismiss = { editingCustomer = null }, onConfirm = { name, contact, phone, addr, note -> viewModel.update(c.id, name, contact, phone, addr, note); editingCustomer = null })
+    }
 
     deleteConfirmId?.let { id ->
         AlertDialog(
@@ -71,7 +77,7 @@ fun CustomerManageScreen(
 }
 
 @Composable
-fun CustomerRow(customer: com.example.inventory.data.local.model.Customer, onDelete: () -> Unit) {
+fun CustomerRow(customer: Customer, onEdit: () -> Unit, onDelete: () -> Unit) {
     Card(shape = RoundedCornerShape(8.dp), elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
         Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.Person, null, tint = Teal500, modifier = Modifier.size(32.dp))
@@ -81,6 +87,7 @@ fun CustomerRow(customer: com.example.inventory.data.local.model.Customer, onDel
                 Text(customer.code, fontSize = 12.sp, color = Grey600)
                 if (customer.phone.isNotBlank()) Text("☎ ${customer.phone}", fontSize = 12.sp, color = Grey600)
             }
+            IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, "编辑", tint = Blue700, modifier = Modifier.size(20.dp)) }
             IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, "删除", tint = Red500, modifier = Modifier.size(20.dp)) }
         }
     }
@@ -117,6 +124,36 @@ fun AddCustomerDialog(onDismiss: () -> Unit, onConfirm: (String, String, String,
             }
         },
         confirmButton = { TextButton(enabled = name.isNotBlank(), onClick = { onConfirm(code, name, contact, phone, address, note) }) { Text("保存") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
+    )
+}
+
+@Composable
+fun EditCustomerDialog(customer: Customer, onDismiss: () -> Unit, onConfirm: (String, String, String, String, String) -> Unit) {
+    var name by remember { mutableStateOf(customer.name) }
+    var contact by remember { mutableStateOf(customer.contact) }
+    var phone by remember { mutableStateOf(customer.phone) }
+    var address by remember { mutableStateOf(customer.address) }
+    var note by remember { mutableStateOf(customer.note) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss, title = { Text("编辑客户") },
+        text = {
+            Column {
+                OutlinedTextField(customer.code, {}, label = { Text("编码") }, singleLine = true, enabled = false, modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(name, { name = it }, label = { Text("名称 *") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(contact, { contact = it }, label = { Text("联系人") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(phone, { phone = it }, label = { Text("电话") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(address, { address = it }, label = { Text("地址") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(note, { note = it }, label = { Text("备注") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            }
+        },
+        confirmButton = { TextButton(enabled = name.isNotBlank(), onClick = { onConfirm(name, contact, phone, address, note) }) { Text("保存") } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
     )
 }

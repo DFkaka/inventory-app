@@ -27,6 +27,7 @@ import com.example.inventory.ui.purchase.StatusBadge
 import com.example.inventory.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 
 @Composable
@@ -38,8 +39,8 @@ fun SalesListScreen(
     val uiState by viewModel.uiState.collectAsState()
     var searchText by remember { mutableStateOf("") }
     var selectedStatus by remember { mutableStateOf("") }
-    var dateFrom by remember { mutableStateOf("") }
-    var dateTo by remember { mutableStateOf("") }
+    var dateFrom by remember { mutableStateOf(LocalDate.now().toString()) }
+    var dateTo by remember { mutableStateOf(LocalDate.now().toString()) }
     var showDatePicker by remember { mutableStateOf(false) }
     var showAddDialog by remember { mutableStateOf(false) }
 
@@ -144,16 +145,20 @@ fun SalesEntryDialog(onDismiss: () -> Unit, onSaved: () -> Unit) {
     val context = LocalContext.current
 
     LaunchedEffect(customerQuery) {
-        scope.launch(Dispatchers.IO) {
-            val customers = CustomerRepository(context).getAllCustomers(customerQuery)
-            customerOptions = customers.map { "${it.code} | ${it.name}" }
+        withContext(Dispatchers.IO) {
+            try {
+                val customers = CustomerRepository(context).getAllCustomers(customerQuery)
+                customerOptions = customers.map { "${it.code} | ${it.name}" }
+            } catch (_: Exception) { }
         }
     }
 
     LaunchedEffect(productQuery) {
-        scope.launch(Dispatchers.IO) {
-            val products = ProductRepository(context).searchProducts(productQuery)
-            productOptions = products.map { "${it.code} | ${it.name}" }
+        withContext(Dispatchers.IO) {
+            try {
+                val products = ProductRepository(context).searchProducts(productQuery)
+                productOptions = products.map { "${it.code} | ${it.name}" }
+            } catch (_: Exception) { }
         }
     }
 

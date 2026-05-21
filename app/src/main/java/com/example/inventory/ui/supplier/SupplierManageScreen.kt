@@ -16,11 +16,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.inventory.data.local.model.Supplier
 import com.example.inventory.data.repository.SupplierRepository
 import com.example.inventory.ui.component.SearchBar
 import com.example.inventory.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,6 +33,7 @@ fun SupplierManageScreen(
     val uiState by viewModel.uiState.collectAsState()
     var searchText by remember { mutableStateOf("") }
     var showAddDialog by remember { mutableStateOf(false) }
+    var editingSupplier by remember { mutableStateOf<Supplier?>(null) }
     var deleteConfirmId by remember { mutableStateOf<Long?>(null) }
 
     Scaffold(
@@ -52,7 +55,7 @@ fun SupplierManageScreen(
             } else {
                 LazyColumn(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(uiState.suppliers, key = { it.id }) { s ->
-                        SupplierRow(supplier = s, onDelete = { deleteConfirmId = s.id })
+                        SupplierRow(supplier = s, onEdit = { editingSupplier = s }, onDelete = { deleteConfirmId = s.id })
                     }
                 }
             }
@@ -60,6 +63,10 @@ fun SupplierManageScreen(
     }
 
     if (showAddDialog) AddSupplierDialog(onDismiss = { showAddDialog = false }, onConfirm = { code, name, contact, bank, note -> viewModel.insert(code, name, contact, bank, note); showAddDialog = false })
+
+    editingSupplier?.let { s ->
+        EditSupplierDialog(supplier = s, onDismiss = { editingSupplier = null }, onConfirm = { name, contact, bank, note -> viewModel.update(s.id, name, contact, bank, note); editingSupplier = null })
+    }
 
     deleteConfirmId?.let { id ->
         AlertDialog(
@@ -71,7 +78,7 @@ fun SupplierManageScreen(
 }
 
 @Composable
-fun SupplierRow(supplier: com.example.inventory.data.local.model.Supplier, onDelete: () -> Unit) {
+fun SupplierRow(supplier: Supplier, onEdit: () -> Unit, onDelete: () -> Unit) {
     Card(shape = RoundedCornerShape(8.dp), elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
         Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.Business, null, tint = Blue700, modifier = Modifier.size(32.dp))
@@ -81,6 +88,7 @@ fun SupplierRow(supplier: com.example.inventory.data.local.model.Supplier, onDel
                 Text(supplier.code, fontSize = 12.sp, color = Grey600)
                 if (supplier.contact.isNotBlank()) Text(supplier.contact, fontSize = 12.sp, color = Grey600)
             }
+            IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, "编辑", tint = Blue700, modifier = Modifier.size(20.dp)) }
             IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, "删除", tint = Red500, modifier = Modifier.size(20.dp)) }
         }
     }
@@ -114,6 +122,33 @@ fun AddSupplierDialog(onDismiss: () -> Unit, onConfirm: (String, String, String,
             }
         },
         confirmButton = { TextButton(enabled = name.isNotBlank(), onClick = { onConfirm(code, name, contact, bank, note) }) { Text("保存") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
+    )
+}
+
+@Composable
+fun EditSupplierDialog(supplier: Supplier, onDismiss: () -> Unit, onConfirm: (String, String, String, String) -> Unit) {
+    var name by remember { mutableStateOf(supplier.name) }
+    var contact by remember { mutableStateOf(supplier.contact) }
+    var bank by remember { mutableStateOf(supplier.bankAccount) }
+    var note by remember { mutableStateOf(supplier.note) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss, title = { Text("编辑供应商") },
+        text = {
+            Column {
+                OutlinedTextField(supplier.code, {}, label = { Text("编码") }, singleLine = true, enabled = false, modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(name, { name = it }, label = { Text("名称 *") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(contact, { contact = it }, label = { Text("联系人") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(bank, { bank = it }, label = { Text("银行账号") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(note, { note = it }, label = { Text("备注") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            }
+        },
+        confirmButton = { TextButton(enabled = name.isNotBlank(), onClick = { onConfirm(name, contact, bank, note) }) { Text("保存") } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
     )
 }

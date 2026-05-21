@@ -13,6 +13,7 @@ class SupplierRepository(context: Context) : BaseRepository(context) {
     fun generateCode(prefix: String = ""): String = dao.generateCode(prefix)
     fun insert(code: String, name: String, contact: String = "", bankAccount: String = "", note: String = ""): Long =
         dao.insert(code, name, contact, bankAccount, note)
+    fun update(id: Long, name: String, contact: String = "", bankAccount: String = "", note: String = "") = dao.update(id, name, contact, bankAccount, note)
     fun delete(id: Long): Int = dao.delete(id)
     fun isCodeExists(code: String): Boolean = dao.isCodeExists(code)
 }

@@ -52,4 +52,10 @@ class CustomerManageViewModel(application: Application) : AndroidViewModel(appli
             loadCustomers(_uiState.value.keyword)
         }
     }
+    fun update(id: Long, name: String, contact: String, phone: String, address: String, note: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repo.update(id, name, contact, phone, address, note)
+            loadCustomers(_uiState.value.keyword)
+        }
+    }
 }

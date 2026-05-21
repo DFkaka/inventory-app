@@ -56,7 +56,15 @@ class CustomerDao(private val db: SQLiteDatabase) {
         return db.insert("customers", null, cv)
     }
 
-    fun delete(id: Long): Int {
+    
+    fun update(id: Long, name: String, contact: String = "", phone: String = "", address: String = "", note: String = "") {
+        val cv = ContentValues().apply {
+            put("name", name); put("contact", contact)
+            put("phone", phone); put("address", address); put("note", note)
+        }
+        db.update("customers", cv, "id = ?", arrayOf(id.toString()))
+    }
+fun delete(id: Long): Int {
         return db.delete("customers", "id = ?", arrayOf(id.toString()))
     }
 

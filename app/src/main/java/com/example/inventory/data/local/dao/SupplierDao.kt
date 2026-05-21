@@ -55,7 +55,15 @@ class SupplierDao(private val db: SQLiteDatabase) {
         return db.insert("suppliers", null, cv)
     }
 
-    fun delete(id: Long): Int {
+    
+    fun update(id: Long, name: String, contact: String = "", bankAccount: String = "", note: String = "") {
+        val cv = ContentValues().apply {
+            put("name", name); put("contact", contact)
+            put("bank_account", bankAccount); put("note", note)
+        }
+        db.update("suppliers", cv, "id = ?", arrayOf(id.toString()))
+    }
+fun delete(id: Long): Int {
         return db.delete("suppliers", "id = ?", arrayOf(id.toString()))
     }
 
