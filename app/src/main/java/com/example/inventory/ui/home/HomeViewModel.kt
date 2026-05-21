@@ -3,6 +3,7 @@
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.inventory.data.local.model.RecentBizRecord
 import com.example.inventory.data.repository.InventoryRepository
 import com.example.inventory.data.repository.ReportRepository
 import kotlinx.coroutines.Dispatchers
@@ -17,6 +18,7 @@ data class HomeUiState(
     val purchaseTotal: Double = 0.0,
     val salesTotal: Double = 0.0,
     val lowStockCount: Int = 0,
+    val recentRecords: List<RecentBizRecord> = emptyList(),
     val isLoading: Boolean = true
 )
 
@@ -39,6 +41,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 val purchaseTotal = reportRepo.getPurchaseTotal()
                 val salesTotal = reportRepo.getSalesTotal()
                 val lowStockCount = inventoryRepo.getLowStockAlerts().size
+                val recentRecords = reportRepo.getRecentBizRecords(5)
 
                 _uiState.value = HomeUiState(
                     productCount = productCount,
@@ -47,6 +50,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                     purchaseTotal = purchaseTotal,
                     salesTotal = salesTotal,
                     lowStockCount = lowStockCount,
+                    recentRecords = recentRecords,
                     isLoading = false
                 )
             } catch (e: Exception) {

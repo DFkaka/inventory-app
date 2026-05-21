@@ -5,18 +5,45 @@ import com.example.inventory.data.local.model.SalesOrder
 
 class SalesDao(private val db: SQLiteDatabase) {
 
-    fun getAll(keyword: String = ""): List<SalesOrder> {
+    fun getAll(
+        keyword: String = "",
+        status: String = "",
+        dateFrom: String = "",
+        dateTo: String = ""
+    ): List<SalesOrder> {
         val list = mutableListOf<SalesOrder>()
-        val sql = if (keyword.isNotBlank())
-            "SELECT * FROM sales_orders WHERE order_no LIKE ? OR customer LIKE ? ORDER BY order_date DESC"
-        else
-            "SELECT * FROM sales_orders ORDER BY order_date DESC"
-        val args = if (keyword.isNotBlank()) {
-            val like = "%$keyword%"
-            arrayOf(like, like)
-        } else null
+        val conditions = mutableListOf<String>()
+        val args = mutableListOf<String>()
 
-        db.rawQuery(sql, args).use { cursor ->
+        if (keyword.isNotBlank()) {
+            val like = "%$keyword%"
+            conditions.add("(so.order_no LIKE ? OR so.customer LIKE ? OR c.code LIKE ? OR c.name LIKE ?)")
+            args.addAll(listOf(like, like, like, like))
+        }
+        if (status.isNotBlank()) {
+            when (status) {
+                "草稿" -> conditions.add("so.status = 'draft'")
+                "已审核" -> conditions.add("so.status = 'shipped'")
+            }
+        }
+        if (dateFrom.isNotBlank()) {
+            conditions.add("so.order_date >= ?")
+            args.add(dateFrom)
+        }
+        if (dateTo.isNotBlank()) {
+            conditions.add("so.order_date <= ?")
+            args.add(dateTo)
+        }
+
+        val where = if (conditions.isEmpty()) "" else "WHERE " + conditions.joinToString(" AND ")
+        val sql = """
+            SELECT so.* FROM sales_orders so
+            LEFT JOIN customers c ON so.customer = c.name
+            $where
+            ORDER BY so.order_date DESC
+        """.trimIndent()
+
+        db.rawQuery(sql, args.toTypedArray()).use { cursor ->
             while (cursor.moveToNext()) list.add(mapOrder(cursor))
         }
         return list

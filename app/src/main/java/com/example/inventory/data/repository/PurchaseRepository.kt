@@ -8,7 +8,12 @@ class PurchaseRepository(context: Context) : BaseRepository(context) {
 
     private val dao by lazy { PurchaseDao(db) }
 
-    fun getAllOrders(keyword: String = ""): List<PurchaseOrder> = dao.getAll(keyword)
+    fun getAllOrders(
+        keyword: String = "",
+        status: String = "",
+        dateFrom: String = "",
+        dateTo: String = ""
+    ): List<PurchaseOrder> = dao.getAll(keyword, status, dateFrom, dateTo)
 
     fun getOrdersByStatus(status: String): List<PurchaseOrder> = dao.getByStatus(status)
 

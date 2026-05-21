@@ -2,8 +2,37 @@
 
 import android.database.sqlite.SQLiteDatabase
 import com.example.inventory.data.local.model.InventoryLog
+import com.example.inventory.data.local.model.RecentBizRecord
 
 class ReportDao(private val db: SQLiteDatabase) {
+
+    fun getRecentBizRecords(limit: Int = 5): List<RecentBizRecord> {
+        val list = mutableListOf<RecentBizRecord>()
+        db.rawQuery("""
+            SELECT type, order_no, party_name, order_date, total_amount, status
+            FROM (
+                SELECT '采购' as type, order_no, supplier as party_name, order_date, total_amount, status
+                FROM purchase_orders
+                UNION ALL
+                SELECT '销售' as type, order_no, customer as party_name, order_date, total_amount, status
+                FROM sales_orders
+            )
+            ORDER BY order_date DESC, order_no DESC
+            LIMIT ?
+        """.trimIndent(), arrayOf(limit.toString())).use { cursor ->
+            while (cursor.moveToNext()) {
+                list.add(RecentBizRecord(
+                    type = cursor.getString(0),
+                    orderNo = cursor.getString(1),
+                    partyName = cursor.getString(2),
+                    orderDate = cursor.getString(3),
+                    totalAmount = cursor.getDouble(4),
+                    status = cursor.getString(5)
+                ))
+            }
+        }
+        return list
+    }
 
     fun getInventoryLogs(productId: Long? = null, limit: Int = 100): List<InventoryLog> {
         val list = mutableListOf<InventoryLog>()

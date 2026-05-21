@@ -5,21 +5,46 @@ import com.example.inventory.data.local.model.PurchaseOrder
 
 class PurchaseDao(private val db: SQLiteDatabase) {
 
-    fun getAll(keyword: String = ""): List<PurchaseOrder> {
+    fun getAll(
+        keyword: String = "",
+        status: String = "",
+        dateFrom: String = "",
+        dateTo: String = ""
+    ): List<PurchaseOrder> {
         val list = mutableListOf<PurchaseOrder>()
-        val sql = if (keyword.isNotBlank())
-            "SELECT * FROM purchase_orders WHERE order_no LIKE ? OR supplier LIKE ? ORDER BY order_date DESC"
-        else
-            "SELECT * FROM purchase_orders ORDER BY order_date DESC"
-        val args = if (keyword.isNotBlank()) {
-            val like = "%$keyword%"
-            arrayOf(like, like)
-        } else null
+        val conditions = mutableListOf<String>()
+        val args = mutableListOf<String>()
 
-        db.rawQuery(sql, args).use { cursor ->
-            while (cursor.moveToNext()) {
-                list.add(mapOrder(cursor))
+        if (keyword.isNotBlank()) {
+            val like = "%$keyword%"
+            conditions.add("(po.order_no LIKE ? OR po.supplier LIKE ? OR s.code LIKE ? OR s.name LIKE ?)")
+            args.addAll(listOf(like, like, like, like))
+        }
+        if (status.isNotBlank()) {
+            when (status) {
+                "草稿" -> conditions.add("po.status = 'draft'")
+                "已审核" -> conditions.add("po.status = 'received'")
             }
+        }
+        if (dateFrom.isNotBlank()) {
+            conditions.add("po.order_date >= ?")
+            args.add(dateFrom)
+        }
+        if (dateTo.isNotBlank()) {
+            conditions.add("po.order_date <= ?")
+            args.add(dateTo)
+        }
+
+        val where = if (conditions.isEmpty()) "" else "WHERE " + conditions.joinToString(" AND ")
+        val sql = """
+            SELECT po.* FROM purchase_orders po
+            LEFT JOIN suppliers s ON po.supplier = s.name
+            $where
+            ORDER BY po.order_date DESC
+        """.trimIndent()
+
+        db.rawQuery(sql, args.toTypedArray()).use { cursor ->
+            while (cursor.moveToNext()) list.add(mapOrder(cursor))
         }
         return list
     }
