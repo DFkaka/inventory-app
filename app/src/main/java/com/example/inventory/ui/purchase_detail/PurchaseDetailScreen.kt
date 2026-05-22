@@ -20,7 +20,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.inventory.data.local.model.PurchaseOrderItem
 import com.example.inventory.data.repository.ProductRepository
-import com.example.inventory.data.repository.PurchaseRepository
 import com.example.inventory.ui.component.SearchableDropdown
 import com.example.inventory.ui.purchase.StatusBadge
 import com.example.inventory.ui.theme.*
@@ -123,8 +122,8 @@ fun PurchaseDetailScreen(
                 if (uiState.items.isEmpty()) {
                     item { Text("暂无明细", color = Grey600, fontSize = 13.sp, modifier = Modifier.padding(vertical = 16.dp)) }
                 } else {
-                    items(uiState.items, key = { it.id }) { item ->
                     item { ItemTableHeader() }
+                    items(uiState.items, key = { it.id }) { item ->
                         ItemTableRow(item = item, editable = !isAudited, onEdit = { editingItem = item }, onDelete = { deleteConfirmId = item.id })
                     }
                 }
@@ -218,7 +217,7 @@ fun EditItemDialog(item: PurchaseOrderItem, onDismiss: () -> Unit, onConfirm: (D
 }
 
 @Composable
-fun AddItemDialog(supplierName: String = "", onDismiss: () -> Unit, onConfirm: (productCode: String, productName: String, qty: Double, price: Double, barcode: String, unit: String) -> Unit) {
+fun AddItemDialog(onDismiss: () -> Unit, onConfirm: (productCode: String, productName: String, qty: Double, price: Double, barcode: String, unit: String) -> Unit) {
     var productQuery by remember { mutableStateOf("") }
     var productOptions by remember { mutableStateOf(listOf<String>()) }
     var selectedProduct by remember { mutableStateOf("") }
@@ -281,72 +280,6 @@ fun AddItemDialog(supplierName: String = "", onDismiss: () -> Unit, onConfirm: (
 fun ItemTableHeader() {
     Surface(color = Blue50) {
         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp)) {
-            Text("商品编码", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Grey900, modifier = Modifier.width(72.dp))
-            Text("名称", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Grey900, modifier = Modifier.weight(1f))
-            Text("数量", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Grey900, modifier = Modifier.width(48.dp))
-            Text("单价", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Grey900, modifier = Modifier.width(64.dp))
-            Text("小计", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Grey900, modifier = Modifier.width(72.dp))
-            Text("操作", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Grey900, modifier = Modifier.width(72.dp))
-        }
-    }
-    HorizontalDivider(thickness = 1.5.dp, color = Grey500)
-}
-
-@Composable
-fun ItemTableRow(item: PurchaseOrderItem, editable: Boolean = true, onEdit: () -> Unit = {}, onDelete: () -> Unit = {}) {
-    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(item.productCode, fontSize = 11.sp, modifier = Modifier.width(72.dp))
-        Text(item.productName, fontSize = 12.sp, modifier = Modifier.weight(1f), maxLines = 1)
-        Text("%.1f".format(item.quantity), fontSize = 11.sp, modifier = Modifier.width(48.dp))
-        Text("¥%.2f".format(item.unitPrice), fontSize = 11.sp, modifier = Modifier.width(64.dp))
-        Text("¥%.2f".format(item.subtotal), fontSize = 11.sp, fontWeight = FontWeight.Medium, color = Orange500, modifier = Modifier.width(72.dp))
-        if (editable) {
-            Row(modifier = Modifier.width(72.dp)) {
-                IconButton(onClick = onEdit, modifier = Modifier.size(28.dp)) { Icon(Icons.Default.Edit, "编辑", tint = Blue700, modifier = Modifier.size(16.dp)) }
-                IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) { Icon(Icons.Default.Delete, "删除", tint = Red500, modifier = Modifier.size(16.dp)) }
-            }
-        }
-    }
-    HorizontalDivider(thickness = 1.dp, color = Grey300)
-}
-
-@Composable
-fun ItemTableHeader() {
-    Surface(color = Blue50) {
-        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp)) {
-            Text("商品编码", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Grey900, modifier = Modifier.width(72.dp))
-            Text("名称", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Grey900, modifier = Modifier.weight(1f))
-            Text("数量", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Grey900, modifier = Modifier.width(48.dp))
-            Text("单价", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Grey900, modifier = Modifier.width(64.dp))
-            Text("小计", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Grey900, modifier = Modifier.width(72.dp))
-            Text("操作", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Grey900, modifier = Modifier.width(72.dp))
-        }
-    }
-    HorizontalDivider(thickness = 1.5.dp, color = Grey500)
-}
-
-@Composable
-fun ItemTableRow(item: PurchaseOrderItem, editable: Boolean = true, onEdit: () -> Unit = {}, onDelete: () -> Unit = {}) {
-    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(item.productCode, fontSize = 11.sp, modifier = Modifier.width(72.dp))
-        Text(item.productName, fontSize = 12.sp, modifier = Modifier.weight(1f), maxLines = 1)
-        Text("%.1f".format(item.quantity), fontSize = 11.sp, modifier = Modifier.width(48.dp))
-        Text("¥%.2f".format(item.unitPrice), fontSize = 11.sp, modifier = Modifier.width(64.dp))
-        Text("¥%.2f".format(item.subtotal), fontSize = 11.sp, fontWeight = FontWeight.Medium, color = Orange500, modifier = Modifier.width(72.dp))
-        if (editable) {
-            Row(modifier = Modifier.width(72.dp)) {
-                IconButton(onClick = onEdit, modifier = Modifier.size(28.dp)) { Icon(Icons.Default.Edit, "编辑", tint = Blue700, modifier = Modifier.size(16.dp)) }
-                IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) { Icon(Icons.Default.Delete, "删除", tint = Red500, modifier = Modifier.size(16.dp)) }
-            }
-        }
-    }
-    HorizontalDivider(thickness = 1.dp, color = Grey300)
-}
-
-@Composable
-fun ItemTableHeader() {
-    Surface(color = Blue50) {
-        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp)) {
             Text("编码", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Grey900, modifier = Modifier.width(72.dp))
             Text("名称", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Grey900, modifier = Modifier.weight(1f))
             Text("数量", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Grey900, modifier = Modifier.width(48.dp))
@@ -359,7 +292,7 @@ fun ItemTableHeader() {
 }
 
 @Composable
-fun ItemTableRow(item: PurchaseOrderItem, editable: Boolean = true, onEdit: () -> Unit, onDelete: () -> Unit) {
+fun ItemTableRow(item: PurchaseOrderItem, editable: Boolean = true, onEdit: () -> Unit = {}, onDelete: () -> Unit = {}) {
     Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(item.productCode, fontSize = 11.sp, modifier = Modifier.width(72.dp))
         Text(item.productName, fontSize = 12.sp, modifier = Modifier.weight(1f), maxLines = 1)
