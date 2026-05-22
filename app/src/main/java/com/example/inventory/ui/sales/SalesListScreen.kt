@@ -75,8 +75,9 @@ fun SalesListScreen(
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("暂无销售单", color = MaterialTheme.colorScheme.onSurfaceVariant) }
             } else {
                 Text("共 ${uiState.orders.size} 条", fontSize = 12.sp, color = Grey600, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
-                LazyColumn(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(uiState.orders, key = { it.id }) { order -> SalesOrderCard(order, onClick = { onOrderClick(order.id) }) }
+                LazyColumn(modifier = Modifier.padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
+                    item { SalesTableHeader() }
+                    items(uiState.orders, key = { it.id }) { order -> SalesTableRow(order, onClick = { onOrderClick(order.id) }) }
                 }
             }
         }
@@ -105,29 +106,31 @@ fun SalesListScreen(
 }
 
 @Composable
-fun SalesOrderCard(order: SalesOrder, onClick: () -> Unit = {}) {
-    Card(onClick = onClick, shape = RoundedCornerShape(8.dp), elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text(order.orderNo, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                StatusBadge(label = when (order.status) { "draft" -> "草稿"; "shipped" -> "已审核"; "cancelled" -> "已取消"; else -> order.status }, color = when (order.status) { "shipped" -> Green500; "cancelled" -> Red500; else -> Grey600 })
-            }
-            Spacer(modifier = Modifier.height(6.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("客户: ${order.customer}", fontSize = 13.sp)
-                Text(order.orderDate, fontSize = 12.sp, color = Grey600)
-            }
-            Spacer(modifier = Modifier.height(6.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("¥%.2f".format(order.totalAmount), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Green500)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("已付: ¥%.2f".format(order.paidAmount), fontSize = 12.sp, color = Grey600)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    StatusBadge(label = order.paymentStatus, color = if (order.paymentStatus == "已结单") Green500 else Orange500)
-                }
-            }
+fun SalesTableHeader() {
+    Surface(color = Blue50, shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)) {
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp)) {
+            Text("单号", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Grey900, modifier = Modifier.width(120.dp))
+            Text("客户", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Grey900, modifier = Modifier.weight(1f))
+            Text("日期", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Grey900, modifier = Modifier.width(95.dp))
+            Text("金额", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Grey900, modifier = Modifier.width(85.dp))
+            Text("状态", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Grey900, modifier = Modifier.width(50.dp))
         }
     }
+    HorizontalDivider(thickness = 1.dp, color = Grey400)
+}
+
+@Composable
+fun SalesTableRow(order: SalesOrder, onClick: () -> Unit) {
+    Surface(onClick = onClick, color = MaterialTheme.colorScheme.surface) {
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(order.orderNo, fontSize = 12.sp, modifier = Modifier.width(120.dp))
+            Text(order.customer, fontSize = 12.sp, color = Grey600, modifier = Modifier.weight(1f), maxLines = 1)
+            Text(order.orderDate, fontSize = 11.sp, color = Grey600, modifier = Modifier.width(95.dp))
+            Text("¥%.2f".format(order.totalAmount), fontSize = 12.sp, fontWeight = FontWeight.Medium, color = Green500, modifier = Modifier.width(85.dp))
+            StatusBadge(label = if (order.status == "shipped") "已审" else if (order.status == "cancelled") "取消" else "草稿", color = if (order.status == "shipped") Green500 else if (order.status == "cancelled") Red500 else Grey600)
+        }
+    }
+    HorizontalDivider(thickness = 0.5.dp, color = Grey200)
 }
 
 @Composable

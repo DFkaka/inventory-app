@@ -74,8 +74,9 @@ fun PurchaseListScreen(
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("暂无进货单", color = MaterialTheme.colorScheme.onSurfaceVariant) }
             } else {
                 Text("共 ${uiState.orders.size} 条", fontSize = 12.sp, color = Grey600, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
-                LazyColumn(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(uiState.orders, key = { it.id }) { order -> OrderCard(order, onClick = { onOrderClick(order.id) }) }
+                LazyColumn(modifier = Modifier.padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
+                    item { OrderTableHeader() }
+                    items(uiState.orders, key = { it.id }) { order -> OrderTableRow(order, onClick = { onOrderClick(order.id) }) }
                 }
             }
         }
@@ -220,4 +221,32 @@ fun PurchaseEntryDialog(onDismiss: () -> Unit, onSaved: () -> Unit, allSuppliers
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
     )
+}
+
+@Composable
+fun OrderTableHeader() {
+    Surface(color = Blue50, shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)) {
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp)) {
+            Text("单号", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Grey900, modifier = Modifier.width(120.dp))
+            Text("供应商", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Grey900, modifier = Modifier.weight(1f))
+            Text("日期", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Grey900, modifier = Modifier.width(95.dp))
+            Text("金额", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Grey900, modifier = Modifier.width(85.dp))
+            Text("状态", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Grey900, modifier = Modifier.width(50.dp))
+        }
+    }
+    HorizontalDivider(thickness = 1.dp, color = Grey400)
+}
+
+@Composable
+fun OrderTableRow(order: PurchaseOrder, onClick: () -> Unit) {
+    Surface(onClick = onClick, color = MaterialTheme.colorScheme.surface) {
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(order.orderNo, fontSize = 12.sp, modifier = Modifier.width(120.dp))
+            Text(order.supplier, fontSize = 12.sp, color = Grey600, modifier = Modifier.weight(1f), maxLines = 1)
+            Text(order.orderDate, fontSize = 11.sp, color = Grey600, modifier = Modifier.width(95.dp))
+            Text("¥%.2f".format(order.totalAmount), fontSize = 12.sp, fontWeight = FontWeight.Medium, color = Orange500, modifier = Modifier.width(85.dp))
+            StatusBadge(label = if (order.status == "received") "已审" else if (order.status == "cancelled") "取消" else "草稿", color = if (order.status == "received") Green500 else if (order.status == "cancelled") Red500 else Grey600)
+        }
+    }
+    HorizontalDivider(thickness = 0.5.dp, color = Grey200)
 }
