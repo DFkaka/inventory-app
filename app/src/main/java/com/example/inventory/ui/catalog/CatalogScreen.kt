@@ -132,7 +132,7 @@ fun ProductEntryDialog(onDismiss: () -> Unit, onSaved: () -> Unit) {
         scope.launch(Dispatchers.IO) {
             val autoCode = ProductRepository(context).generateCode()
             code = autoCode
-            barcode = autoCode
+            barcode = autoCode  // default, user can change
         }
     }
 
@@ -144,7 +144,7 @@ fun ProductEntryDialog(onDismiss: () -> Unit, onSaved: () -> Unit) {
                 Spacer(modifier = Modifier.height(6.dp))
                 OutlinedTextField(name, { name = it }, label = { Text("名称 *") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 Spacer(modifier = Modifier.height(6.dp))
-                OutlinedTextField(barcode, {}, label = { Text("条码(同编码)") }, singleLine = true, enabled = false, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(barcode, { barcode = it }, label = { Text("条码") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(unit, { unit = it }, label = { Text("单位") }, singleLine = true, modifier = Modifier.weight(1f))

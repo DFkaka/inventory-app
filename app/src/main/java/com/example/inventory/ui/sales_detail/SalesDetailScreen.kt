@@ -97,6 +97,25 @@ fun SalesDetailScreen(
                 }
 
                 item {
+ 
+                if (order.status == "draft") {
+                    item {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Button(
+                                onClick = { viewModel.approve(order.id) },
+                                colors = ButtonDefaults.buttonColors(containerColor = Green500),
+                                modifier = Modifier.weight(1f)
+                            ) { Icon(Icons.Default.Check, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(4.dp)); Text("审核") }
+                            val isToday = order.orderDate == java.time.LocalDate.now().toString()
+                            Button(
+                                onClick = { viewModel.reject(order.id) },
+                                colors = ButtonDefaults.buttonColors(containerColor = Red500),
+                                enabled = isToday,
+                                modifier = Modifier.weight(1f)
+                            ) { Icon(Icons.Default.Close, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(4.dp)); Text(if (isToday) "驳回" else "驳回(仅当天)") }
+                        }
+                    }
+                }
                     Text("明细项目 (${uiState.items.size})", fontSize = 15.sp, fontWeight = FontWeight.Bold)
                 }
 

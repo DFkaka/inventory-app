@@ -90,7 +90,12 @@ class PurchaseDao(private val db: SQLiteDatabase) {
         db.delete("purchase_order_items", "id = ?", arrayOf(itemId.toString()))
     }
 
-    fun updateTotalAmount(orderId: Long, totalAmount: Double) {
+    
+    fun updateStatus(orderId: Long, status: String) {
+        val cv = ContentValues().apply { put("status", status) }
+        db.update("purchase_orders", cv, "id = ?", arrayOf(orderId.toString()))
+    }
+fun updateTotalAmount(orderId: Long, totalAmount: Double) {
         val cv = ContentValues().apply { put("total_amount", totalAmount) }
         db.update("purchase_orders", cv, "id = ?", arrayOf(orderId.toString()))
     }

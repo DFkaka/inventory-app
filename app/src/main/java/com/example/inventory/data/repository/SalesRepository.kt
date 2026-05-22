@@ -19,5 +19,6 @@ class SalesRepository(context: Context) : BaseRepository(context) {
         dao.insertItem(orderId, productId, quantity, unitPrice, barcode, unit, spec)
     fun deleteItem(itemId: Long) = dao.deleteItem(itemId)
     fun updateItem(itemId: Long, quantity: Double, unitPrice: Double) = dao.updateItem(itemId, quantity, unitPrice)
+    fun updateStatus(orderId: Long, status: String) = dao.updateStatus(orderId, status)
     fun updateTotalAmount(orderId: Long, totalAmount: Double) = dao.updateTotalAmount(orderId, totalAmount)
 }

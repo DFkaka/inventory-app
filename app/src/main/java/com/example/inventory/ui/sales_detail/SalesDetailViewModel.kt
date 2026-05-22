@@ -75,4 +75,20 @@ class SalesDetailViewModel(application: Application) : AndroidViewModel(applicat
             val order = salesRepo.getOrderById(orderId)
             _uiState.update { it.copy(order = order, items = items) }
         }
-    }}
+    }
+    fun approve(orderId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            salesRepo.updateStatus(orderId, "shipped")
+            val order = salesRepo.getOrderById(orderId)
+            _uiState.update { it.copy(order = order) }
+        }
+    }
+
+    fun reject(orderId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            salesRepo.updateStatus(orderId, "cancelled")
+            val order = salesRepo.getOrderById(orderId)
+            _uiState.update { it.copy(order = order) }
+        }
+    }
+}
