@@ -3,8 +3,12 @@
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.inventory.data.local.model.Product
 import com.example.inventory.data.local.model.PurchaseOrder
+import com.example.inventory.data.local.model.Supplier
+import com.example.inventory.data.repository.ProductRepository
 import com.example.inventory.data.repository.PurchaseRepository
+import com.example.inventory.data.repository.SupplierRepository
 import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,18 +22,33 @@ data class PurchaseListUiState(
     val status: String = "",
     val dateFrom: String = "",
     val dateTo: String = "",
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    val allSuppliers: List<Supplier> = emptyList(),
+    val allProducts: List<Product> = emptyList()
 )
 
 class PurchaseListViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repo = PurchaseRepository(application)
+    private val supplierRepo = SupplierRepository(application)
+    private val productRepo = ProductRepository(application)
 
     private val _uiState = MutableStateFlow(PurchaseListUiState())
     val uiState: StateFlow<PurchaseListUiState> = _uiState
 
     init {
         loadOrders()
+        loadDropdownData()
+    }
+
+    private fun loadDropdownData() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val suppliers = supplierRepo.getAllSuppliers()
+                val products = productRepo.searchProducts("")
+                _uiState.update { it.copy(allSuppliers = suppliers, allProducts = products) }
+            } catch (_: Exception) { }
+        }
     }
 
     fun loadOrders(keyword: String = "", status: String = "", dateFrom: String = "", dateTo: String = "") {
@@ -55,4 +74,6 @@ class PurchaseListViewModel(application: Application) : AndroidViewModel(applica
     fun filterDate(dateFrom: String, dateTo: String) {
         loadOrders(_uiState.value.keyword, _uiState.value.status, dateFrom, dateTo)
     }
+
+    fun refreshDropdownData() { loadDropdownData() }
 }

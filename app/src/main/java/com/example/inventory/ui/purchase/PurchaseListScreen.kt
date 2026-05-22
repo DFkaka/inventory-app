@@ -84,7 +84,7 @@ fun PurchaseListScreen(
         }
     }
 
-    if (showAddDialog) { PurchaseEntryDialog(onDismiss = { showAddDialog = false }, onSaved = { viewModel.loadOrders() }) }
+    if (showAddDialog) { PurchaseEntryDialog(onDismiss = { showAddDialog = false }, onSaved = { viewModel.loadOrders(); viewModel.refreshDropdownData() }, allSuppliers = uiState.allSuppliers, allProducts = uiState.allProducts) }
 
     if (showDatePicker) {
         AlertDialog(
@@ -136,39 +136,31 @@ fun StatusBadge(label: String, color: androidx.compose.ui.graphics.Color) {
 }
 
 @Composable
-fun PurchaseEntryDialog(onDismiss: () -> Unit, onSaved: () -> Unit) {
+fun PurchaseEntryDialog(onDismiss: () -> Unit, onSaved: () -> Unit, allSuppliers: List<Supplier>, allProducts: List<Product>) {
     var supplierQuery by remember { mutableStateOf("") }
-    var supplierOptions by remember { mutableStateOf(listOf<String>()) }
     var selectedSupplier by remember { mutableStateOf("") }
     var orderDate by remember { mutableStateOf(LocalDate.now().toString()) }
     var note by remember { mutableStateOf("") }
     var productQuery by remember { mutableStateOf("") }
-    var productOptions by remember { mutableStateOf(listOf<String>()) }
     var selectedProduct by remember { mutableStateOf("") }
     var quantity by remember { mutableStateOf("") }
     var unitPrice by remember { mutableStateOf("") }
     var isSaving by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-
-    LaunchedEffect(supplierQuery) {
-        withContext(Dispatchers.IO) {
-            try {
-                val suppliers = SupplierRepository(context).getAllSuppliers(supplierQuery)
-                supplierOptions = suppliers.map { "${it.code} | ${it.name}" }
-            } catch (_: Exception) { }
-        }
+ 
+    val supplierOptions = remember(allSuppliers, supplierQuery) {
+        val q = supplierQuery.trim()
+        if (q.isEmpty()) allSuppliers.map { "${it.code} | ${it.name}" }
+        else allSuppliers.filter { it.code.contains(q, true) || it.name.contains(q, true) }.map { "${it.code} | ${it.name}" }
     }
  
-    LaunchedEffect(productQuery) {
-        withContext(Dispatchers.IO) {
-            try {
-                val products = ProductRepository(context).searchProducts(productQuery)
-                productOptions = products.map { "${it.code} | ${it.name}" }
-            } catch (_: Exception) { }
-        }
+    val productOptions = remember(allProducts, productQuery) {
+        val q = productQuery.trim()
+        if (q.isEmpty()) allProducts.map { "${it.code} | ${it.name}" }
+        else allProducts.filter { it.code.contains(q, true) || it.name.contains(q, true) }.map { "${it.code} | ${it.name}" }
     }
-
+ 
     AlertDialog(
         onDismissRequest = onDismiss, title = { Text("新增进货单") },
         text = {
@@ -214,10 +206,11 @@ fun PurchaseEntryDialog(onDismiss: () -> Unit, onSaved: () -> Unit) {
                     val price = unitPrice.toDoubleOrNull() ?: 0.0
                     val total = qty * price
                     purchaseRepo.insert(orderNo, supplierName, orderDate, total, "draft", note)
-                    scope.launch(Dispatchers.Main) { onSaved(); onDismiss() }
+                    withContext(Dispatchers.Main) { onSaved(); onDismiss() }
                 }
             }) { Text(if (isSaving) "保存中..." else "保存") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
     )
+}
 }
