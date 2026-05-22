@@ -1,4 +1,4 @@
-﻿package com.example.inventory.ui.sales_detail
+package com.example.inventory.ui.sales_detail
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.inventory.data.local.model.SalesOrderItem
 import com.example.inventory.data.repository.ProductRepository
+import com.example.inventory.data.repository.SalesRepository
 import com.example.inventory.ui.component.SearchableDropdown
 import com.example.inventory.ui.purchase.StatusBadge
 import com.example.inventory.ui.theme.*
@@ -215,7 +216,7 @@ fun EditSalesItemDialog(item: SalesOrderItem, onDismiss: () -> Unit, onConfirm: 
 }
 
 @Composable
-fun AddSalesItemDialog(onDismiss: () -> Unit, onConfirm: (productCode: String, productName: String, qty: Double, price: Double, barcode: String, unit: String) -> Unit) {
+fun AddSalesItemDialog(customerName: String = "", onDismiss: () -> Unit, onConfirm: (productCode: String, productName: String, qty: Double, price: Double, barcode: String, unit: String) -> Unit) {
     var productQuery by remember { mutableStateOf("") }
     var productOptions by remember { mutableStateOf(listOf<String>()) }
     var selectedProduct by remember { mutableStateOf("") }

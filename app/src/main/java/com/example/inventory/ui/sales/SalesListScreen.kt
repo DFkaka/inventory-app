@@ -1,4 +1,4 @@
-﻿package com.example.inventory.ui.sales
+package com.example.inventory.ui.sales
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -194,13 +194,20 @@ fun SalesEntryDialog(onDismiss: () -> Unit, onSaved: () -> Unit, allCustomers: L
             TextButton(enabled = selectedCustomer.isNotBlank() && selectedProduct.isNotBlank() && quantity.isNotBlank() && !isSaving, onClick = {
                 isSaving = true
                 scope.launch(Dispatchers.IO) {
+                    val productRepo = ProductRepository(context)
                     val salesRepo = SalesRepository(context)
+                    val productCode = selectedProduct.substringBefore(" |")
                     val customerName = selectedCustomer.substringAfter("| ").trim()
                     val orderNo = "SO-${LocalDate.now().toString().replace("-", "")}-${System.currentTimeMillis() % 100000}"
                     val qty = quantity.toDoubleOrNull() ?: 1.0
                     val price = unitPrice.toDoubleOrNull() ?: 0.0
                     val total = qty * price
-                    salesRepo.insert(orderNo, customerName, orderDate, total, "draft", note)
+                    val orderId = salesRepo.insert(orderNo, customerName, orderDate, total, "draft", note)
+                    val products = productRepo.searchProducts(productCode)
+                    val product = products.firstOrNull()
+                    if (product != null && product.id > 0) {
+                        salesRepo.insertItem(orderId, product.id, qty, price, product.barcode, product.unit)
+                    }
                     withContext(Dispatchers.Main) { onSaved(); onDismiss() }
                 }
             }) { Text(if (isSaving) "保存中..." else "保存") }
@@ -208,4 +215,3 @@ fun SalesEntryDialog(onDismiss: () -> Unit, onSaved: () -> Unit, allCustomers: L
         dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
     )
 }
-

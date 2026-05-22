@@ -1,4 +1,4 @@
-﻿package com.example.inventory.data.local.dao
+package com.example.inventory.data.local.dao
 
 import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
@@ -95,7 +95,16 @@ class PurchaseDao(private val db: SQLiteDatabase) {
         val cv = ContentValues().apply { put("status", status) }
         db.update("purchase_orders", cv, "id = ?", arrayOf(orderId.toString()))
     }
-fun updateTotalAmount(orderId: Long, totalAmount: Double) {
+fun getLastPrice(supplierName: String, productCode: String): Double? {
+        var price: Double? = null
+        db.rawQuery("SELECT poi.unit_price FROM purchase_order_items poi INNER JOIN purchase_orders po ON poi.order_id = po.id WHERE po.supplier = ? AND po.status = 'received' AND EXISTS (SELECT 1 FROM products p WHERE p.id = poi.product_id AND p.code = ?) ORDER BY po.order_date DESC LIMIT 1", arrayOf(supplierName, productCode)).use { cursor ->
+            if (cursor.moveToFirst()) price = cursor.getDouble(0)
+        }
+        return price
+    }
+
+    
+    fun updateTotalAmount(orderId: Long, totalAmount: Double) {
         val cv = ContentValues().apply { put("total_amount", totalAmount) }
         db.update("purchase_orders", cv, "id = ?", arrayOf(orderId.toString()))
     }

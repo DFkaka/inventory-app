@@ -1,4 +1,4 @@
-﻿package com.example.inventory.ui.purchase
+package com.example.inventory.ui.purchase
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -200,13 +200,20 @@ fun PurchaseEntryDialog(onDismiss: () -> Unit, onSaved: () -> Unit, allSuppliers
             TextButton(enabled = selectedSupplier.isNotBlank() && selectedProduct.isNotBlank() && quantity.isNotBlank() && !isSaving, onClick = {
                 isSaving = true
                 scope.launch(Dispatchers.IO) {
+                    val productRepo = ProductRepository(context)
                     val purchaseRepo = PurchaseRepository(context)
+                    val productCode = selectedProduct.substringBefore(" |")
                     val supplierName = selectedSupplier.substringAfter("| ").trim()
                     val orderNo = "PO-${LocalDate.now().toString().replace("-", "")}-${System.currentTimeMillis() % 100000}"
                     val qty = quantity.toDoubleOrNull() ?: 1.0
                     val price = unitPrice.toDoubleOrNull() ?: 0.0
                     val total = qty * price
-                    purchaseRepo.insert(orderNo, supplierName, orderDate, total, "draft", note)
+                    val orderId = purchaseRepo.insert(orderNo, supplierName, orderDate, total, "draft", note)
+                    val products = productRepo.searchProducts(productCode)
+                    val product = products.firstOrNull()
+                    if (product != null && product.id > 0) {
+                        purchaseRepo.insertItem(orderId, product.id, qty, price, product.barcode, product.unit)
+                    }
                     withContext(Dispatchers.Main) { onSaved(); onDismiss() }
                 }
             }) { Text(if (isSaving) "保存中..." else "保存") }

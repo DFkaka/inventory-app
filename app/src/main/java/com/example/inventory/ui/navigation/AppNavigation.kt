@@ -1,4 +1,4 @@
-﻿package com.example.inventory.ui.navigation
+package com.example.inventory.ui.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -98,7 +98,13 @@ fun MainScreen() {
             modifier = Modifier.padding(padding)
         ) {
             composable(MainTab.DASHBOARD.route) {
-                HomeScreen(onNavigate = { id -> navController.navigate("product/$id") })
+                HomeScreen(
+                    onNavigate = { id -> navController.navigate("product/$id") },
+                    onOrderClick = { type, orderId ->
+                        if (type == "采购") navController.navigate("purchase_detail/$orderId")
+                        else navController.navigate("sales_detail/$orderId")
+                    }
+                )
             }
             composable(MainTab.CATALOG.route) {
                 CatalogScreen()
@@ -145,6 +151,7 @@ fun MainScreen() {
                     orderId = entry.arguments?.getLong("orderId") ?: 0L,
                     onBack = { navController.popBackStack() }
                 )
-            }        }
+            }
+        }
     }
 }

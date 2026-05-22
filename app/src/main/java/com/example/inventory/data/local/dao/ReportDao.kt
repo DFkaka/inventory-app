@@ -1,4 +1,4 @@
-﻿package com.example.inventory.data.local.dao
+package com.example.inventory.data.local.dao
 
 import android.database.sqlite.SQLiteDatabase
 import com.example.inventory.data.local.model.InventoryLog
@@ -9,12 +9,12 @@ class ReportDao(private val db: SQLiteDatabase) {
     fun getRecentBizRecords(limit: Int = 5): List<RecentBizRecord> {
         val list = mutableListOf<RecentBizRecord>()
         db.rawQuery("""
-            SELECT type, order_no, party_name, order_date, total_amount, status
+            SELECT type, order_no, party_name, order_date, total_amount, status, id
             FROM (
-                SELECT '采购' as type, order_no, supplier as party_name, order_date, total_amount, status
+                SELECT '采购' as type, order_no, supplier as party_name, order_date, total_amount, status, id
                 FROM purchase_orders
                 UNION ALL
-                SELECT '销售' as type, order_no, customer as party_name, order_date, total_amount, status
+                SELECT '销售' as type, order_no, customer as party_name, order_date, total_amount, status, id
                 FROM sales_orders
             )
             ORDER BY order_date DESC, order_no DESC
@@ -27,7 +27,8 @@ class ReportDao(private val db: SQLiteDatabase) {
                     partyName = cursor.getString(2),
                     orderDate = cursor.getString(3),
                     totalAmount = cursor.getDouble(4),
-                    status = cursor.getString(5)
+                    status = cursor.getString(5),
+                    orderId = cursor.getLong(6)
                 ))
             }
         }

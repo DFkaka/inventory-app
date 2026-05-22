@@ -1,11 +1,13 @@
-﻿package com.example.inventory.ui.home
+package com.example.inventory.ui.home
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -21,9 +23,12 @@ import com.example.inventory.ui.theme.*
 @Composable
 fun HomeScreen(
     onNavigate: (Long) -> Unit = {},
+    onOrderClick: (type: String, orderId: Long) -> Unit = { _, _ -> },
     viewModel: HomeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) { viewModel.loadStats() }
 
     if (uiState.isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -64,7 +69,7 @@ fun HomeScreen(
                         modifier = Modifier.padding(top = 8.dp))
                 }
                 items(uiState.recentRecords.take(5)) { record ->
-                    RecentBizCard(record)
+                    RecentBizCard(record, onClick = { onOrderClick(record.type, record.orderId) })
                 }
             }
         }
@@ -72,11 +77,12 @@ fun HomeScreen(
 }
 
 @Composable
-fun RecentBizCard(record: RecentBizRecord) {
+fun RecentBizCard(record: RecentBizRecord, onClick: () -> Unit = {}) {
     val isPurchase = record.type == "采购"
     Card(
         shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        modifier = Modifier.clickable { onClick() }
     ) {
         Row(
             modifier = Modifier.padding(12.dp),

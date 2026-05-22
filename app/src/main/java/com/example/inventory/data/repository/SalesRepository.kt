@@ -1,4 +1,4 @@
-﻿package com.example.inventory.data.repository
+package com.example.inventory.data.repository
 
 import android.content.Context
 import com.example.inventory.data.local.dao.SalesDao
@@ -20,5 +20,6 @@ class SalesRepository(context: Context) : BaseRepository(context) {
     fun deleteItem(itemId: Long) = dao.deleteItem(itemId)
     fun updateItem(itemId: Long, quantity: Double, unitPrice: Double) = dao.updateItem(itemId, quantity, unitPrice)
     fun updateStatus(orderId: Long, status: String) = dao.updateStatus(orderId, status)
+    fun getLastPrice(customerName: String, productCode: String): Double? = dao.getLastPrice(customerName, productCode)
     fun updateTotalAmount(orderId: Long, totalAmount: Double) = dao.updateTotalAmount(orderId, totalAmount)
 }
