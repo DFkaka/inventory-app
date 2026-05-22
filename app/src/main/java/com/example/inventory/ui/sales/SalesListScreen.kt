@@ -209,4 +209,3 @@ fun SalesEntryDialog(onDismiss: () -> Unit, onSaved: () -> Unit, allCustomers: L
     )
 }
 
-}

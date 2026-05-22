@@ -214,4 +214,3 @@ fun PurchaseEntryDialog(onDismiss: () -> Unit, onSaved: () -> Unit, allSuppliers
         dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
     )
 }
-}
