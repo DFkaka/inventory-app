@@ -234,7 +234,7 @@ fun OrderTableHeader() {
             Text("状态", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Grey900, modifier = Modifier.width(50.dp))
         }
     }
-    HorizontalDivider(thickness = 1.dp, color = Grey400)
+    HorizontalDivider(thickness = 1.5.dp, color = Grey500)
 }
 
 @Composable
@@ -248,5 +248,5 @@ fun OrderTableRow(order: PurchaseOrder, onClick: () -> Unit) {
             StatusBadge(label = if (order.status == "received") "已审" else if (order.status == "cancelled") "取消" else "草稿", color = if (order.status == "received") Green500 else if (order.status == "cancelled") Red500 else Grey600)
         }
     }
-    HorizontalDivider(thickness = 0.5.dp, color = Grey200)
+    HorizontalDivider(thickness = 1.dp, color = Grey300)
 }
