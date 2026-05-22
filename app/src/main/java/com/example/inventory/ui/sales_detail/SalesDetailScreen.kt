@@ -95,7 +95,6 @@ fun SalesDetailScreen(
                         }
                     }
                 }
-                }
  
                 if (order != null && order.status == "draft") {
                     item {
