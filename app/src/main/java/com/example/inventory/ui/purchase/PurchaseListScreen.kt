@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.inventory.data.local.model.Product
 import com.example.inventory.data.local.model.PurchaseOrder
 import com.example.inventory.data.local.model.Supplier
 import com.example.inventory.data.repository.ProductRepository
