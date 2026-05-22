@@ -157,6 +157,19 @@ fun PurchaseEntryDialog(onDismiss: () -> Unit, onSaved: () -> Unit, allSuppliers
         else allSuppliers.filter { it.code.contains(q, true) || it.name.contains(q, true) }.map { "${it.code} | ${it.name}" }
     }
  
+        LaunchedEffect(selectedProduct) {
+        if (selectedProduct.isNotBlank() && selectedSupplier.isNotBlank()) {
+            scope.launch(Dispatchers.IO) {
+                val code = selectedProduct.substringBefore(" |")
+                val supplierName = selectedSupplier.substringAfter("| ").trim()
+                val lastPrice = PurchaseRepository(context).getLastPrice(supplierName, code)
+                if (lastPrice != null && (lastPrice ?: 0.0) > 0) {
+                    unitPrice = String.format("%.2f", lastPrice)
+                }
+            }
+        }
+    }
+ 
     val productOptions = remember(allProducts, productQuery) {
         val q = productQuery.trim()
         if (q.isEmpty()) allProducts.map { "${it.code} | ${it.name}" }

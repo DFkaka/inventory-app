@@ -153,6 +153,19 @@ fun SalesEntryDialog(onDismiss: () -> Unit, onSaved: () -> Unit, allCustomers: L
         else allCustomers.filter { it.code.contains(q, true) || it.name.contains(q, true) }.map { "${it.code} | ${it.name}" }
     }
  
+        LaunchedEffect(selectedProduct) {
+        if (selectedProduct.isNotBlank() && selectedCustomer.isNotBlank()) {
+            scope.launch(Dispatchers.IO) {
+                val code = selectedProduct.substringBefore(" |")
+                val customerName = selectedCustomer.substringAfter("| ").trim()
+                val lastPrice = SalesRepository(context).getLastPrice(customerName, code)
+                if (lastPrice != null && (lastPrice ?: 0.0) > 0) {
+                    unitPrice = String.format("%.2f", lastPrice)
+                }
+            }
+        }
+    }
+ 
     val productOptions = remember(allProducts, productQuery) {
         val q = productQuery.trim()
         if (q.isEmpty()) allProducts.map { "${it.code} | ${it.name}" }
