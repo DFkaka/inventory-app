@@ -95,12 +95,11 @@ fun SalesDetailScreen(
                         }
                     }
                 }
-
-                item {
+                }
  
-                if (order.status == "draft") {
+                if (order != null && order.status == "draft") {
                     item {
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             Button(
                                 onClick = { viewModel.approve(order.id) },
                                 colors = ButtonDefaults.buttonColors(containerColor = Green500),
@@ -116,6 +115,8 @@ fun SalesDetailScreen(
                         }
                     }
                 }
+ 
+                item {
                     Text("明细项目 (${uiState.items.size})", fontSize = 15.sp, fontWeight = FontWeight.Bold)
                 }
 
