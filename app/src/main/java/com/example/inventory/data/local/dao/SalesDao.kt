@@ -1,4 +1,4 @@
-package com.example.inventory.data.local.dao
+﻿package com.example.inventory.data.local.dao
 
 import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
@@ -42,14 +42,16 @@ class SalesDao(private val db: SQLiteDatabase) {
 
     fun getItems(orderId: Long): List<SalesOrderItem> {
         val list = mutableListOf<SalesOrderItem>()
-        db.rawQuery("SELECT * FROM sales_order_items WHERE order_id = ?", arrayOf(orderId.toString())).use { cursor ->
+        db.rawQuery("SELECT soi.*, p.code, p.name FROM sales_order_items soi LEFT JOIN products p ON soi.product_id = p.id WHERE soi.order_id = ?", arrayOf(orderId.toString())).use { cursor ->
             while (cursor.moveToNext()) {
                 list.add(SalesOrderItem(
                     id = cursor.getLong(0), orderId = cursor.getLong(1),
                     productId = cursor.getLong(2), quantity = cursor.getDouble(3),
                     unitPrice = cursor.getDouble(4), subtotal = cursor.getDouble(5),
                     barcode = cursor.getString(6), unit = cursor.getString(7),
-                    spec = cursor.getString(8)
+                    spec = cursor.getString(8),
+                    productCode = cursor.getString(9) ?: "",
+                    productName = cursor.getString(10) ?: ""
                 ))
             }
         }
