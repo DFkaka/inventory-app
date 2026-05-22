@@ -124,7 +124,7 @@ fun SalesDetailScreen(
                     item { Text("暂无明细", color = Grey600, fontSize = 13.sp, modifier = Modifier.padding(vertical = 16.dp)) }
                 } else {
                     items(uiState.items, key = { it.id }) { item ->
-                        SalesItemCard(item = item, editable = !isAudited, onEdit = { editingItem = item }, onDelete = { deleteConfirmId = item.id })
+                        SalesItemTableRow(item = item, editable = !isAudited, onEdit = { editingItem = item }, onDelete = { deleteConfirmId = item.id })
                     }
                 }
             }
