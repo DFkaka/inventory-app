@@ -118,7 +118,6 @@ fun PurchaseDetailScreen(
                 item {
                     Text("明细项目 (${uiState.items.size})", fontSize = 15.sp, fontWeight = FontWeight.Bold)
                 }
-                }
 
                 if (uiState.items.isEmpty()) {
                     item { Text("暂无明细", color = Grey600, fontSize = 13.sp, modifier = Modifier.padding(vertical = 16.dp)) }
