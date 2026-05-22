@@ -68,7 +68,7 @@ fun HomeScreen(
                     Text("最近业务状态", fontSize = 16.sp, fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(top = 8.dp))
                 }
-                items(uiState.recentRecords.take(5)) { record ->
+                items(uiState.recentRecords.take(10)) { record ->
                     RecentBizCard(record, onClick = { onOrderClick(record.type, record.orderId) })
                 }
             }

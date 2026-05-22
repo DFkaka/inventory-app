@@ -1,4 +1,4 @@
-﻿package com.example.inventory.ui.home
+package com.example.inventory.ui.home
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
@@ -41,7 +41,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 val purchaseTotal = reportRepo.getPurchaseTotal()
                 val salesTotal = reportRepo.getSalesTotal()
                 val lowStockCount = inventoryRepo.getLowStockAlerts().size
-                val recentRecords = reportRepo.getRecentBizRecords(5)
+                val recentRecords = reportRepo.getRecentBizRecords(10)
 
                 _uiState.value = HomeUiState(
                     productCount = productCount,
